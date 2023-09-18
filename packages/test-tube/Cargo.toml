@@ -2,7 +2,7 @@
 description = "library for building integration testing environments for cosmos-sdk chains in Rust"
 edition = "2021"
 license = "MIT OR Apache-2.0"
-name = "test-tube-core"
+name = "test-tube-coreum"
 repository = "https://github.com/CoreumFoundation/test-tube"
 version = "0.1.0"
 

@@ -6,7 +6,7 @@ use coreum_wasm_sdk::types::cosmwasm::wasm::v1::{
 use cosmwasm_std::Coin;
 use serde::{de::DeserializeOwned, Serialize};
 
-use test_tube_core::{
+use test_tube_coreum::{
     runner::Runner, Account, DecodeError, EncodeError, RunnerError, RunnerExecuteResult,
     RunnerResult, SigningAccount,
 };

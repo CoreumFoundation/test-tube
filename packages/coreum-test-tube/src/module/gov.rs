@@ -3,10 +3,9 @@ use coreum_wasm_sdk::types::cosmos::gov::v1beta1::{
     QueryParamsResponse, QueryProposalRequest, QueryProposalResponse,
 };
 
-use test_tube_core::{fn_execute, fn_query};
-
-use test_tube_core::module::Module;
-use test_tube_core::runner::Runner;
+use test_tube_coreum::{fn_execute, fn_query};
+use test_tube_coreum::module::Module;
+use test_tube_coreum::runner::Runner;
 
 pub struct Gov<'a, R: Runner<'a>> {
     runner: &'a R,

@@ -8,9 +8,9 @@ use coreum_wasm_sdk::types::coreum::asset::ft::v1::{
     QueryWhitelistedBalanceRequest, QueryWhitelistedBalanceResponse,
     QueryWhitelistedBalancesRequest, QueryWhitelistedBalancesResponse,
 };
-use test_tube_core::{fn_execute, fn_query, Module};
+use test_tube_coreum::{fn_execute, fn_query, Module};
 
-use test_tube_core::runner::Runner;
+use test_tube_coreum::runner::Runner;
 
 pub struct AssetFT<'a, R: Runner<'a>> {
     runner: &'a R,

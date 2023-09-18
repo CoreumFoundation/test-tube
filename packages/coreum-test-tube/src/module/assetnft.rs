@@ -7,9 +7,9 @@ use coreum_wasm_sdk::types::coreum::asset::nft::v1::{
     QueryWhitelistedAccountsForNFTRequest, QueryWhitelistedAccountsForNFTResponse,
     QueryWhitelistedRequest, QueryWhitelistedResponse,
 };
-use test_tube_core::{fn_execute, fn_query, Module};
+use test_tube_coreum::{fn_execute, fn_query, Module};
 
-use test_tube_core::runner::Runner;
+use test_tube_coreum::runner::Runner;
 
 pub struct AssetNFT<'a, R: Runner<'a>> {
     runner: &'a R,
@@ -85,7 +85,7 @@ mod tests {
     use coreum_wasm_sdk::types::cosmos::base::v1beta1::Coin as BaseCoin;
     use cosmwasm_std::Coin;
 
-    use test_tube_core::{Account, Module};
+    use test_tube_coreum::{Account, Module};
 
     use crate::{runner::app::FEE_DENOM, AssetNFT, CoreumTestApp, NFT};
 

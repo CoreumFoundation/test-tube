@@ -4,9 +4,9 @@ use coreum_wasm_sdk::types::coreum::nft::v1beta1::{
     QueryNFTResponse, QueryNFTsRequest, QueryNFTsResponse, QueryOwnerRequest, QueryOwnerResponse,
     QuerySupplyRequest, QuerySupplyResponse,
 };
-use test_tube_core::{fn_execute, fn_query, Module};
+use test_tube_coreum::{fn_execute, fn_query, Module};
 
-use test_tube_core::runner::Runner;
+use test_tube_coreum::runner::Runner;
 
 pub struct NFT<'a, R: Runner<'a>> {
     runner: &'a R,

@@ -5,8 +5,8 @@ mod gov;
 mod nft;
 mod wasm;
 
-pub use test_tube_core::macros;
-pub use test_tube_core::module::Module;
+pub use test_tube_coreum::macros;
+pub use test_tube_coreum::module::Module;
 
 pub use assetft::AssetFT;
 pub use assetnft::AssetNFT;

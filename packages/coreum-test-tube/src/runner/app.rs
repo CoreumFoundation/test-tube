@@ -4,11 +4,10 @@ use cosmwasm_std::{Coin, Timestamp};
 
 use prost::Message;
 use serde::de::DeserializeOwned;
-use test_tube_core::account::SigningAccount;
-
-use test_tube_core::runner::result::{RunnerExecuteResult, RunnerResult};
-use test_tube_core::runner::Runner;
-use test_tube_core::BaseApp;
+use test_tube_coreum::account::SigningAccount;
+use test_tube_coreum::runner::result::{RunnerExecuteResult, RunnerResult};
+use test_tube_coreum::runner::Runner;
+use test_tube_coreum::BaseApp;
 
 pub const FEE_DENOM: &str = "ucore";
 const ADDRESS_PREFIX: &str = "core";

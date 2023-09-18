@@ -4,8 +4,8 @@ use coreum_wasm_sdk::types::cosmos::bank::v1beta1::{
     QueryBalanceRequest, QueryBalanceResponse, QueryTotalSupplyRequest, QueryTotalSupplyResponse,
 };
 
-use test_tube_core::module::Module;
-use test_tube_core::runner::Runner;
+use test_tube_coreum::module::Module;
+use test_tube_coreum::runner::Runner;
 
 pub struct Bank<'a, R: Runner<'a>> {
     runner: &'a R,
