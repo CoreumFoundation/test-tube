@@ -3,5 +3,3 @@
 members = [
   "packages/*",
 ]
-
-resolver = "2"
