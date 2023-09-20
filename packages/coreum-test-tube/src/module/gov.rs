@@ -81,7 +81,6 @@ mod tests {
                     }),
                     initial_deposit: min_deposit,
                     proposer: proposer.address(),
-                    is_expedited: false,
                 },
                 &proposer,
             )

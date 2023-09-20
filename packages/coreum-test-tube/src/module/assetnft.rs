@@ -1,10 +1,9 @@
 use coreum_wasm_sdk::types::coreum::asset::nft::v1::{
     EmptyResponse, MsgAddToWhitelist, MsgBurn, MsgFreeze, MsgIssueClass, MsgMint,
-    MsgRemoveFromWhitelist, MsgUnfreeze, QueryBurntNFTRequest, QueryBurntNFTResponse,
-    QueryBurntNFTsInClassRequest, QueryBurntNFTsInClassResponse, QueryClassRequest,
-    QueryClassResponse, QueryClassesRequest, QueryClassesResponse, QueryFrozenRequest,
-    QueryFrozenResponse, QueryParamsRequest, QueryParamsResponse,
-    QueryWhitelistedAccountsForNFTRequest, QueryWhitelistedAccountsForNFTResponse,
+    MsgRemoveFromWhitelist, MsgUnfreeze, QueryBurntNftRequest, QueryBurntNftResponse,
+    QueryClassRequest, QueryClassResponse, QueryClassesRequest, QueryClassesResponse,
+    QueryFrozenRequest, QueryFrozenResponse, QueryParamsRequest, QueryParamsResponse,
+    QueryWhitelistedAccountsForNftRequest, QueryWhitelistedAccountsForNftResponse,
     QueryWhitelistedRequest, QueryWhitelistedResponse,
 };
 use test_tube_coreum::{fn_execute, fn_query, Module};
@@ -60,15 +59,15 @@ where
     }
 
     fn_query! {
-        pub query_whitelisted_accounts_for_nft ["/coreum.asset.nft.v1.Query/WhitelistedAccountsForNFT"]: QueryWhitelistedAccountsForNFTRequest => QueryWhitelistedAccountsForNFTResponse
+        pub query_whitelisted_accounts_for_nft ["/coreum.asset.nft.v1.Query/WhitelistedAccountsForNFT"]: QueryWhitelistedAccountsForNftRequest => QueryWhitelistedAccountsForNftResponse
     }
 
     fn_query! {
-        pub query_burnt_nft ["/coreum.asset.nft.v1.Query/BurntNFT"]: QueryBurntNFTRequest => QueryBurntNFTResponse
+        pub query_burnt_nft ["/coreum.asset.nft.v1.Query/BurntNFT"]: QueryBurntNftRequest => QueryBurntNftResponse
     }
 
     fn_query! {
-        pub query_burnt_nfts_in_class ["/coreum.asset.nft.v1.Query/BurntNFTsInClass"]: QueryBurntNFTsInClassRequest => QueryBurntNFTsInClassResponse
+        pub query_burnt_nfts_in_class ["/coreum.asset.nft.v1.Query/BurntNFTsInClass"]: QueryBurntNftRequest => QueryBurntNftResponse
     }
 }
 

@@ -1,7 +1,7 @@
 use coreum_wasm_sdk::types::coreum::nft::v1beta1::{
     MsgSend, MsgSendResponse, QueryBalanceRequest, QueryBalanceResponse, QueryClassRequest,
-    QueryClassResponse, QueryClassesRequest, QueryClassesResponse, QueryNFTRequest,
-    QueryNFTResponse, QueryNFTsRequest, QueryNFTsResponse, QueryOwnerRequest, QueryOwnerResponse,
+    QueryClassResponse, QueryClassesRequest, QueryClassesResponse, QueryNfTsRequest,
+    QueryNfTsResponse, QueryNftRequest, QueryNftResponse, QueryOwnerRequest, QueryOwnerResponse,
     QuerySupplyRequest, QuerySupplyResponse,
 };
 use test_tube_coreum::{fn_execute, fn_query, Module};
@@ -37,11 +37,11 @@ where
     }
 
     fn_query! {
-        pub query_nfts ["/coreum.nft.v1beta1.Query/NFTs"]: QueryNFTsRequest => QueryNFTsResponse
+        pub query_nfts ["/coreum.nft.v1beta1.Query/NFTs"]: QueryNfTsRequest => QueryNfTsResponse
     }
 
     fn_query! {
-        pub query_nft["/coreum.nft.v1beta1.Query/NFT"]: QueryNFTRequest => QueryNFTResponse
+        pub query_nft["/coreum.nft.v1beta1.Query/NFT"]: QueryNftRequest => QueryNftResponse
     }
 
     fn_query! {
