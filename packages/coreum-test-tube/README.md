@@ -46,18 +46,14 @@ use coreum_test_tube::CoreumTestApp;
 
 let app = CoreumTestApp::new();
 
-let accs = app
-    .init_accounts(
-        &[
-            Coin::new(1_000_000_000_000, FEE_DENOM),
-            Coin::new(1_000_000_000_000, FEE_DENOM),
-        ],
-        2,
-    )
-    .unwrap();
+let accounts = app
+            .init_accounts(&coins(100_000_000_000, FEE_DENOM), 4)
+            .unwrap();
 
-let account1 = &accs[0];
-let account2 = &accs[1];
+let acc1 = accounts.get(0).unwrap();
+let acc2 = accounts.get(1).unwrap();
+let acc3 = accounts.get(2).unwrap();
+let acc4 = accounts.get(3).unwrap();
 ```
 
 Now if we want to test a cosmwasm contract, we need to
@@ -74,17 +70,11 @@ use coreum_test_tube::{Account, Module, CoreumTestApp, Wasm};
 
 let app = CoreumTestApp::new();
 let accs = app
-    .init_accounts(
-        &[
-            Coin::new(1_000_000_000_000, FEE_DENOM),
-            Coin::new(1_000_000_000_000, FEE_DENOM),
-        ],
-        2,
-    )
-    .unwrap();
+        .init_accounts(&coins(100_000_000_000, FEE_DENOM), 2)
+        .unwrap();
 
-let account1 = &accs[0];
-let account2 = &accs[1];
+let account1 = &accs.get(0).unwrap();
+let account2 = &accs.get(1).unwrap();;
 ```
 
 To test our smart contract we must first build an optimized wasm file so that we can store it. For this example, as already mentioned, we will use cw1_whitelist, which we already have compiled in the `test_artifacts` directory.
