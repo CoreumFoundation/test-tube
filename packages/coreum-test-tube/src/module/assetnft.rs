@@ -1,10 +1,13 @@
 use coreum_wasm_sdk::types::coreum::asset::nft::v1::{
-    EmptyResponse, MsgAddToWhitelist, MsgBurn, MsgFreeze, MsgIssueClass, MsgMint,
+    EmptyResponse, MsgAddToClassWhitelist, MsgAddToWhitelist, MsgBurn, MsgClassFreeze,
+    MsgClassUnfreeze, MsgFreeze, MsgIssueClass, MsgMint, MsgRemoveFromClassWhitelist,
     MsgRemoveFromWhitelist, MsgUnfreeze, QueryBurntNftRequest, QueryBurntNftResponse,
-    QueryClassRequest, QueryClassResponse, QueryClassesRequest, QueryClassesResponse,
-    QueryFrozenRequest, QueryFrozenResponse, QueryParamsRequest, QueryParamsResponse,
-    QueryWhitelistedAccountsForNftRequest, QueryWhitelistedAccountsForNftResponse,
-    QueryWhitelistedRequest, QueryWhitelistedResponse,
+    QueryClassFrozenAccountsRequest, QueryClassFrozenAccountsResponse, QueryClassFrozenRequest,
+    QueryClassFrozenResponse, QueryClassRequest, QueryClassResponse,
+    QueryClassWhitelistedAccountsRequest, QueryClassWhitelistedAccountsResponse,
+    QueryClassesRequest, QueryClassesResponse, QueryFrozenRequest, QueryFrozenResponse,
+    QueryParamsRequest, QueryParamsResponse, QueryWhitelistedAccountsForNftRequest,
+    QueryWhitelistedAccountsForNftResponse, QueryWhitelistedRequest, QueryWhitelistedResponse,
 };
 use test_tube_coreum::{fn_execute, fn_query, Module};
 
@@ -38,6 +41,14 @@ where
 
     fn_execute! { pub remove_from_whitelist: MsgRemoveFromWhitelist => EmptyResponse }
 
+    fn_execute! { pub add_to_class_whitelist: MsgAddToClassWhitelist => EmptyResponse }
+
+    fn_execute! { pub remove_from_class_whitelist: MsgRemoveFromClassWhitelist => EmptyResponse }
+
+    fn_execute! { pub class_freeze: MsgClassFreeze => EmptyResponse }
+
+    fn_execute! { pub class_unfreeze: MsgClassUnfreeze => EmptyResponse }
+
     fn_query! {
         pub query_params ["/coreum.asset.nft.v1.Query/Params"]: QueryParamsRequest => QueryParamsResponse
     }
@@ -55,11 +66,23 @@ where
     }
 
     fn_query! {
+        pub query_class_frozen ["/coreum.asset.nft.v1.Query/ClassFrozen"]: QueryClassFrozenRequest => QueryClassFrozenResponse
+    }
+
+    fn_query! {
+        pub query_class_frozen_accounts ["/coreum.asset.nft.v1.Query/ClassFrozenAccounts"]: QueryClassFrozenAccountsRequest => QueryClassFrozenAccountsResponse
+    }
+
+    fn_query! {
         pub query_whitelisted ["/coreum.asset.nft.v1.Query/Whitelisted"]: QueryWhitelistedRequest => QueryWhitelistedResponse
     }
 
     fn_query! {
         pub query_whitelisted_accounts_for_nft ["/coreum.asset.nft.v1.Query/WhitelistedAccountsForNFT"]: QueryWhitelistedAccountsForNftRequest => QueryWhitelistedAccountsForNftResponse
+    }
+
+    fn_query! {
+        pub query_class_whitelisted_accounts ["/coreum.asset.nft.v1.Query/ClassWhitelistedAccounts"]: QueryClassWhitelistedAccountsRequest => QueryClassWhitelistedAccountsResponse
     }
 
     fn_query! {
@@ -72,13 +95,12 @@ where
 }
 
 #[cfg(test)]
+#[cfg(test)]
 mod tests {
     use coreum_wasm_sdk::{
         assetnft::BURNING,
-        types::coreum::{
-            asset::nft::v1::{MsgIssueClass, MsgMint, QueryParamsRequest},
-            nft::v1beta1::{MsgSend, QueryOwnerRequest},
-        },
+        types::coreum::asset::nft::v1::{MsgIssueClass, MsgMint, QueryParamsRequest},
+        types::cosmos::nft::v1beta1::{MsgSend, QueryOwnerRequest},
     };
 
     use coreum_wasm_sdk::types::cosmos::base::v1beta1::Coin as BaseCoin;
@@ -138,6 +160,7 @@ mod tests {
                     uri: "".to_string(),
                     uri_hash: "".to_string(),
                     data: None,
+                    recipient: signer.address(),
                 },
                 &signer,
             )

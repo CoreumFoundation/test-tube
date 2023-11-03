@@ -1,4 +1,4 @@
-use coreum_wasm_sdk::types::coreum::nft::v1beta1::{
+use coreum_wasm_sdk::types::cosmos::nft::v1beta1::{
     MsgSend, MsgSendResponse, QueryBalanceRequest, QueryBalanceResponse, QueryClassRequest,
     QueryClassResponse, QueryClassesRequest, QueryClassesResponse, QueryNfTsRequest,
     QueryNfTsResponse, QueryNftRequest, QueryNftResponse, QueryOwnerRequest, QueryOwnerResponse,
@@ -25,30 +25,30 @@ where
     fn_execute! { pub send: MsgSend => MsgSendResponse }
 
     fn_query! {
-        pub query_balance ["/coreum.nft.v1beta1.Query/Balance"]: QueryBalanceRequest => QueryBalanceResponse
+        pub query_balance ["/cosmos.nft.v1beta1.Query/Balance"]: QueryBalanceRequest => QueryBalanceResponse
     }
 
     fn_query! {
-        pub query_owner ["/coreum.nft.v1beta1.Query/Owner"]: QueryOwnerRequest => QueryOwnerResponse
+        pub query_owner ["/cosmos.nft.v1beta1.Query/Owner"]: QueryOwnerRequest => QueryOwnerResponse
     }
 
     fn_query! {
-        pub query_supply ["/coreum.nft.v1beta1.Query/Supply"]: QuerySupplyRequest => QuerySupplyResponse
+        pub query_supply ["/cosmos.nft.v1beta1.Query/Supply"]: QuerySupplyRequest => QuerySupplyResponse
     }
 
     fn_query! {
-        pub query_nfts ["/coreum.nft.v1beta1.Query/NFTs"]: QueryNfTsRequest => QueryNfTsResponse
+        pub query_nfts ["/cosmos.nft.v1beta1.Query/NFTs"]: QueryNfTsRequest => QueryNfTsResponse
     }
 
     fn_query! {
-        pub query_nft["/coreum.nft.v1beta1.Query/NFT"]: QueryNftRequest => QueryNftResponse
+        pub query_nft["/cosmos.nft.v1beta1.Query/NFT"]: QueryNftRequest => QueryNftResponse
     }
 
     fn_query! {
-        pub query_class ["/coreum.nft.v1beta1.Query/Class"]: QueryClassRequest => QueryClassResponse
+        pub query_class ["/cosmos.nft.v1beta1.Query/Class"]: QueryClassRequest => QueryClassResponse
     }
 
     fn_query! {
-        pub query_classes ["/coreum.nft.v1beta1.Query/Classes"]: QueryClassesRequest => QueryClassesResponse
+        pub query_classes ["/cosmos.nft.v1beta1.Query/Classes"]: QueryClassesRequest => QueryClassesResponse
     }
 }

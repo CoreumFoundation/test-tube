@@ -1,6 +1,6 @@
 use coreum_wasm_sdk::types::coreum::asset::ft::v1::{
     EmptyResponse, MsgBurn, MsgFreeze, MsgGloballyFreeze, MsgGloballyUnfreeze, MsgIssue, MsgMint,
-    MsgSetWhitelistedLimit, MsgUnfreeze, MsgUpgradeTokenV1, QueryBalanceRequest,
+    MsgSetFrozen, MsgSetWhitelistedLimit, MsgUnfreeze, MsgUpgradeTokenV1, QueryBalanceRequest,
     QueryBalanceResponse, QueryFrozenBalanceRequest, QueryFrozenBalanceResponse,
     QueryFrozenBalancesRequest, QueryFrozenBalancesResponse, QueryParamsRequest,
     QueryParamsResponse, QueryTokenRequest, QueryTokenResponse, QueryTokenUpgradeStatusesRequest,
@@ -35,6 +35,8 @@ where
     fn_execute! { pub freeze: MsgFreeze => EmptyResponse }
 
     fn_execute! { pub unfreeze: MsgUnfreeze => EmptyResponse }
+
+    fn_execute! { pub set_frozen: MsgSetFrozen => EmptyResponse }
 
     fn_execute! { pub globally_freeze: MsgGloballyFreeze => EmptyResponse }
 
@@ -129,6 +131,8 @@ mod tests {
                     features: vec![MINTING as i32],
                     burn_rate: "0".to_string(),
                     send_commission_rate: "0".to_string(),
+                    uri: "test_uri".to_string(),
+                    uri_hash: "test_uri_hash".to_string(),
                 },
                 &signer,
             )
@@ -152,6 +156,7 @@ mod tests {
                         denom: denom.clone(),
                         amount: "990".to_string(),
                     }),
+                    recipient: signer.address(),
                 },
                 &signer,
             )

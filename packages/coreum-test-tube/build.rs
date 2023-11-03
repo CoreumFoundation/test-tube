@@ -79,7 +79,7 @@ fn main() {
         .header(header.to_str().unwrap())
         // Tell cargo to invalidate the built crate whenever any of the
         // included header files changed.
-        .parse_callbacks(Box::new(bindgen::CargoCallbacks))
+        .parse_callbacks(Box::new(bindgen::CargoCallbacks::new()))
         // Finish the builder and generate the bindings.
         .generate()
         // Unwrap the Result and panic on failure.
@@ -102,6 +102,8 @@ fn build_libcoreumtesttube(out: PathBuf) {
         .current_dir(manifest_dir.join("libcoreumtesttube"))
         .arg("build")
         .arg("-buildmode=c-shared")
+        .arg("-ldflags")
+        .arg("-w")
         .arg("-o")
         .arg(out)
         .arg("main.go")

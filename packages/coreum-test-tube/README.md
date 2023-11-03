@@ -183,6 +183,8 @@ assetft.
             features: vec![MINTING as i32],
             burn_rate: "0".to_string(),
             send_commission_rate: "0".to_string(),
+            uri: "test_uri".to_string(),
+            uri_hash: "test_uri_hash".to_string(),
         },
         &signer,
     )
@@ -207,6 +209,7 @@ assetft
                 denom: denom.clone(),
                 amount: "990".to_string(),
             }),
+            recipient: signer.address(),
         },
         &signer,
     )
