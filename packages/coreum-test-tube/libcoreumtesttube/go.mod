@@ -17,7 +17,7 @@ replace (
 )
 
 require (
-	github.com/CoreumFoundation/coreum/v3 v3.0.0-20231103123629-98b46c19920f
+	github.com/CoreumFoundation/coreum/v3 v3.0.0-20231107070602-2ae43ed1f7cd
 	github.com/CosmWasm/wasmd v0.41.0
 	github.com/cometbft/cometbft v0.37.2
 	github.com/cometbft/cometbft-db v0.8.0
