@@ -3,7 +3,7 @@ use crate::{fn_execute, fn_query};
 use coreum_wasm_sdk::types::cosmos::authz::v1beta1::{
     MsgExec, MsgExecResponse, MsgGrant, MsgGrantResponse, MsgRevokeResponse,
     QueryGranteeGrantsRequest, QueryGranteeGrantsResponse, QueryGranterGrantsRequest,
-    QueryGranterGrantsResponse, QueryGrantsRequest, QueryGrantsResponse,
+    QueryGranterGrantsResponse, QueryGrantsRequest, QueryGrantsResponse, MsgRevoke,
 };
 use test_tube_coreum::module::Module;
 use test_tube_coreum::runner::Runner;
@@ -27,7 +27,7 @@ where
     }
 
     fn_execute! {
-        pub revoke: MsgGrant["/cosmos.authz.v1beta1.MsgRevoke"] => MsgRevokeResponse
+        pub revoke: MsgRevoke["/cosmos.authz.v1beta1.MsgRevoke"] => MsgRevokeResponse
     }
 
     fn_execute! {
