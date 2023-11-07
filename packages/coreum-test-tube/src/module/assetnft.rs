@@ -95,7 +95,6 @@ where
 }
 
 #[cfg(test)]
-#[cfg(test)]
 mod tests {
     use coreum_wasm_sdk::{
         assetnft::BURNING,
