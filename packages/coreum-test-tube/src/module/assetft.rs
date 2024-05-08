@@ -133,6 +133,7 @@ mod tests {
                     send_commission_rate: "0".to_string(),
                     uri: "test_uri".to_string(),
                     uri_hash: "test_uri_hash".to_string(),
+                    extension_settings: None,
                 },
                 &signer,
             )
