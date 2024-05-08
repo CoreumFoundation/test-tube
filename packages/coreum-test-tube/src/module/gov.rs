@@ -44,7 +44,7 @@ mod tests {
     use crate::{Account, Module, Gov, RunnerError};
     use coreum_wasm_sdk::types::cosmos::gov::v1beta1::{QueryParamsRequest, MsgSubmitProposal, QueryProposalRequest};
     use coreum_wasm_sdk::{shim::Any, types::cosmos::gov::v1beta1::TextProposal};
-    use cosmrs::tx::MessageExt;
+    use test_tube_coreum::cosmrs::tx::MessageExt;
 
     #[test]
     fn test_submit_and_query_proposal() {

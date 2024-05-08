@@ -1,6 +1,8 @@
 use crate::runner::error::{DecodeError, RunnerError};
+use base64::engine::general_purpose::STANDARD as BASE64_STANDARD;
+use base64::Engine;
 use cosmrs::proto::cosmos::base::abci::v1beta1::{GasInfo, TxMsgData};
-use cosmrs::proto::tendermint::abci::ResponseDeliverTx;
+use cosmrs::proto::tendermint::v0_37::abci::ResponseDeliverTx;
 use cosmrs::rpc::endpoint::broadcast::tx_commit::Response as TxCommitResponse;
 use cosmwasm_std::{Attribute, Event};
 use prost::Message;
@@ -76,7 +78,7 @@ where
     type Error = RunnerError;
 
     fn try_from(tx_commit_response: TxCommitResponse) -> Result<Self, Self::Error> {
-        let res = tx_commit_response.deliver_tx;
+        let res = tx_commit_response.tx_result;
         let tx_msg_data =
             TxMsgData::decode(res.data.clone()).map_err(DecodeError::ProtoDecodeError)?;
 
@@ -158,7 +160,7 @@ impl RawResult {
 
         let c_string = unsafe { CString::from_raw(ptr) };
         let base64_bytes = c_string.to_bytes();
-        let bytes = base64::decode(base64_bytes).unwrap();
+        let bytes = BASE64_STANDARD.decode(base64_bytes).unwrap();
         let code = bytes[0];
         let content = &bytes[1..];
 

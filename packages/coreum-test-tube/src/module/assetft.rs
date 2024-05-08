@@ -1,12 +1,5 @@
 use coreum_wasm_sdk::types::coreum::asset::ft::v1::{
-    EmptyResponse, MsgBurn, MsgFreeze, MsgGloballyFreeze, MsgGloballyUnfreeze, MsgIssue, MsgMint,
-    MsgSetFrozen, MsgSetWhitelistedLimit, MsgUnfreeze, MsgUpgradeTokenV1, QueryBalanceRequest,
-    QueryBalanceResponse, QueryFrozenBalanceRequest, QueryFrozenBalanceResponse,
-    QueryFrozenBalancesRequest, QueryFrozenBalancesResponse, QueryParamsRequest,
-    QueryParamsResponse, QueryTokenRequest, QueryTokenResponse, QueryTokenUpgradeStatusesRequest,
-    QueryTokenUpgradeStatusesResponse, QueryTokensRequest, QueryTokensResponse,
-    QueryWhitelistedBalanceRequest, QueryWhitelistedBalanceResponse,
-    QueryWhitelistedBalancesRequest, QueryWhitelistedBalancesResponse,
+    EmptyResponse, MsgBurn, MsgClawback, MsgClearAdmin, MsgFreeze, MsgGloballyFreeze, MsgGloballyUnfreeze, MsgIssue, MsgMint, MsgSetFrozen, MsgSetWhitelistedLimit, MsgTransferAdmin, MsgUnfreeze, MsgUpgradeTokenV1, QueryBalanceRequest, QueryBalanceResponse, QueryFrozenBalanceRequest, QueryFrozenBalanceResponse, QueryFrozenBalancesRequest, QueryFrozenBalancesResponse, QueryParamsRequest, QueryParamsResponse, QueryTokenRequest, QueryTokenResponse, QueryTokenUpgradeStatusesRequest, QueryTokenUpgradeStatusesResponse, QueryTokensRequest, QueryTokensResponse, QueryWhitelistedBalanceRequest, QueryWhitelistedBalanceResponse, QueryWhitelistedBalancesRequest, QueryWhitelistedBalancesResponse
 };
 use test_tube_coreum::{fn_execute, fn_query, Module};
 
@@ -42,7 +35,13 @@ where
 
     fn_execute! { pub globally_unfreeze: MsgGloballyUnfreeze => EmptyResponse }
 
+    fn_execute! { pub clawback: MsgClawback => EmptyResponse }
+
     fn_execute! { pub set_whitelisted_limit: MsgSetWhitelistedLimit => EmptyResponse }
+
+    fn_execute! { pub transfer_admin: MsgTransferAdmin => EmptyResponse }
+
+    fn_execute! { pub clear_admin: MsgClearAdmin => EmptyResponse }
 
     fn_execute! { pub upgrade_token_v1: MsgUpgradeTokenV1 => EmptyResponse }
 

@@ -10,14 +10,14 @@ version = "4.0.0"
 exclude = ["coreum", "test_artifacts"]
 
 [dependencies]
-base64 = "0.20.0"
-cosmrs = { version = "0.14.0", features = ["cosmwasm"] }
+base64 = "0.21.5"
+cosmrs = { version = "0.15.0", features = ["cosmwasm"] }
 cosmwasm-std = "1.5.4"
-prost = "0.11.0"
+prost = "0.12.4"
 serde = "1.0.198"
-serde_json = "1.0.108"
-test-tube-coreum = { version = "0.1.0", path = "../test-tube" }
-thiserror = "1.0.50"
+serde_json = "1.0.117"
+test-tube-coreum = { version = "0.2.0", path = "../test-tube" }
+thiserror = "1.0.60"
 # TODO(keyleu): Update dependency once final version of coreum-wasm-sdk crate is pushed
 coreum-wasm-sdk = { git = "https://github.com/CoreumFoundation/coreum-wasm-sdk.git", branch = "keyne/upgrade-wasm-sdk" }
 
@@ -25,5 +25,5 @@ coreum-wasm-sdk = { git = "https://github.com/CoreumFoundation/coreum-wasm-sdk.g
 bindgen = "0.69.1"
 
 [dev-dependencies]
-cw1-whitelist = "1.1.0"
+cw1-whitelist = "1.1.1"
 rayon = "1.7.0"
