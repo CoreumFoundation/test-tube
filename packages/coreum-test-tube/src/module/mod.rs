@@ -4,6 +4,7 @@ mod authz;
 mod bank;
 mod gov;
 mod nft;
+mod staking;
 mod wasm;
 
 pub use test_tube_coreum::macros;
@@ -15,4 +16,5 @@ pub use authz::Authz;
 pub use bank::Bank;
 pub use gov::Gov;
 pub use nft::NFT;
+pub use staking::Staking;
 pub use wasm::Wasm;
