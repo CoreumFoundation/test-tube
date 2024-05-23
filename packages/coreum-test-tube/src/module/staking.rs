@@ -1,6 +1,10 @@
 use coreum_wasm_sdk::types::cosmos::staking::v1beta1::{
     MsgCreateValidator, MsgCreateValidatorResponse, MsgDelegate, MsgDelegateResponse,
-    MsgUndelegate, MsgUndelegateResponse, QueryValidatorsRequest, QueryValidatorsResponse,
+    MsgUndelegate, MsgUndelegateResponse, QueryDelegationRequest, QueryDelegationResponse,
+    QueryDelegatorDelegationsRequest, QueryDelegatorDelegationsResponse,
+    QueryDelegatorUnbondingDelegationsRequest, QueryDelegatorUnbondingDelegationsResponse,
+    QueryUnbondingDelegationRequest, QueryUnbondingDelegationResponse, QueryValidatorsRequest,
+    QueryValidatorsResponse,
 };
 use test_tube_coreum::module::Module;
 use test_tube_coreum::runner::Runner;
@@ -34,6 +38,22 @@ where
 
     fn_query! {
         pub query_validators ["/cosmos.staking.v1beta1.Query/Validators"]: QueryValidatorsRequest => QueryValidatorsResponse
+    }
+
+    fn_query! {
+        pub query_delegation ["/cosmos.staking.v1beta1.Query/Delegation"]: QueryDelegationRequest => QueryDelegationResponse
+    }
+
+    fn_query! {
+        pub query_unbonding_delegation ["/cosmos.staking.v1beta1.Query/UnbondingDelegation"]: QueryUnbondingDelegationRequest => QueryUnbondingDelegationResponse
+    }
+
+    fn_query! {
+        pub query_delegations ["/cosmos.staking.v1beta1.Query/DelegatorDelegations"]: QueryDelegatorDelegationsRequest => QueryDelegatorDelegationsResponse
+    }
+
+    fn_query! {
+        pub query_unbonding_delegations ["/cosmos.staking.v1beta1.Query/DelegatorUnbondingDelegations"]: QueryDelegatorUnbondingDelegationsRequest => QueryDelegatorUnbondingDelegationsResponse
     }
 }
 
@@ -124,13 +144,13 @@ mod tests {
             )
             .unwrap();
 
-            let response = staking
+        let response = staking
             .query_validators(&QueryValidatorsRequest {
                 status: String::from(BondStatus::Bonded.as_str_name()),
                 pagination: None,
             })
             .unwrap();
 
-            assert_eq!(response.validators.len(), 2);
+        assert_eq!(response.validators.len(), 2);
     }
 }
