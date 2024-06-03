@@ -3,8 +3,8 @@ use coreum_wasm_sdk::types::cosmos::staking::v1beta1::{
     MsgUndelegate, MsgUndelegateResponse, QueryDelegationRequest, QueryDelegationResponse,
     QueryDelegatorDelegationsRequest, QueryDelegatorDelegationsResponse,
     QueryDelegatorUnbondingDelegationsRequest, QueryDelegatorUnbondingDelegationsResponse,
-    QueryUnbondingDelegationRequest, QueryUnbondingDelegationResponse, QueryValidatorsRequest,
-    QueryValidatorsResponse,
+    QueryParamsRequest, QueryParamsResponse, QueryUnbondingDelegationRequest,
+    QueryUnbondingDelegationResponse, QueryValidatorsRequest, QueryValidatorsResponse,
 };
 use test_tube_coreum::module::Module;
 use test_tube_coreum::runner::Runner;
@@ -34,6 +34,10 @@ where
 
     fn_execute! {
         pub create_validator: MsgCreateValidator["/cosmos.staking.v1beta1.MsgCreateValidator"] => MsgCreateValidatorResponse
+    }
+
+    fn_query! {
+        pub query_params ["/cosmos.staking.v1beta1.Query/Params"]: QueryParamsRequest => QueryParamsResponse
     }
 
     fn_query! {
