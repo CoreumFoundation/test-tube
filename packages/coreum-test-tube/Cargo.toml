@@ -11,7 +11,7 @@ exclude = ["coreum", "test_artifacts"]
 
 [dependencies]
 base64 = "0.21.5"
-cosmrs = { version = "0.15.0", features = ["cosmwasm"] }
+cosmrs = { version = "0.16.0", features = ["cosmwasm"] }
 cosmwasm-std = "1.5.5"
 prost = "0.12.6"
 serde = "1.0.203"
