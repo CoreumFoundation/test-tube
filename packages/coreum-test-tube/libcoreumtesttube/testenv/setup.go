@@ -24,11 +24,11 @@ import (
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	coreumapp "github.com/CoreumFoundation/coreum/v3/app"
-	coreumconfig "github.com/CoreumFoundation/coreum/v3/pkg/config"
-	coreumconstant "github.com/CoreumFoundation/coreum/v3/pkg/config/constant"
-	assetfttypes "github.com/CoreumFoundation/coreum/v3/x/asset/ft/types"
-	assetnfttypes "github.com/CoreumFoundation/coreum/v3/x/asset/nft/types"
+	coreumapp "github.com/CoreumFoundation/coreum/v4/app"
+	coreumconfig "github.com/CoreumFoundation/coreum/v4/pkg/config"
+	coreumconstant "github.com/CoreumFoundation/coreum/v4/pkg/config/constant"
+	assetfttypes "github.com/CoreumFoundation/coreum/v4/x/asset/ft/types"
+	assetnfttypes "github.com/CoreumFoundation/coreum/v4/x/asset/nft/types"
 )
 
 var NetworkConfig coreumconfig.NetworkConfig
