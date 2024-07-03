@@ -1,7 +1,9 @@
 use std::ffi::CString;
 
+use base64::engine::general_purpose::STANDARD as BASE64_STANDARD;
+use base64::Engine;
 use cosmrs::crypto::secp256k1::SigningKey;
-use cosmrs::proto::tendermint::abci::{RequestDeliverTx, ResponseDeliverTx};
+use cosmrs::proto::tendermint::v0_37::abci::{RequestDeliverTx, ResponseDeliverTx};
 use cosmrs::tx::{Fee, SignerInfo};
 use cosmrs::{tx, Any};
 use cosmwasm_std::{Coin, Timestamp};
@@ -77,7 +79,9 @@ impl BaseApp {
         .map_err(DecodeError::Utf8Error)?
         .to_string();
 
-        let secp256k1_priv = base64::decode(base64_priv).map_err(DecodeError::Base64DecodeError)?;
+        let secp256k1_priv = BASE64_STANDARD
+            .decode(base64_priv)
+            .map_err(DecodeError::Base64DecodeError)?;
         let signing_key = SigningKey::from_slice(&secp256k1_priv).map_err(|e| {
             let msg = e.to_string();
             DecodeError::SigningKeyDecodeError { msg }
@@ -130,7 +134,9 @@ impl BaseApp {
         .map_err(DecodeError::Utf8Error)?
         .to_string();
 
-        let secp256k1_priv = base64::decode(base64_priv).map_err(DecodeError::Base64DecodeError)?;
+        let secp256k1_priv = BASE64_STANDARD
+            .decode(base64_priv)
+            .map_err(DecodeError::Base64DecodeError)?;
         let signing_key = SigningKey::from_slice(&secp256k1_priv).map_err(|e| {
             let msg = e.to_string();
             DecodeError::SigningKeyDecodeError { msg }
@@ -202,16 +208,28 @@ impl BaseApp {
     where
         I: IntoIterator<Item = cosmrs::Any>,
     {
-        let zero_fee = Fee::from_amount_and_gas(
+        self.simulate_tx_bytes(&self.create_signed_tx(
+            msgs,
+            signer,
+            self.default_simulation_fee(),
+        )?)
+    }
+
+    pub fn default_simulation_fee(&self) -> Fee {
+        Fee::from_amount_and_gas(
             cosmrs::Coin {
                 denom: self.fee_denom.parse().unwrap(),
                 amount: MIN_GAS_PRICE,
             },
             0u64,
-        );
+        )
+    }
 
-        let tx = self.create_signed_tx(msgs, signer, zero_fee)?;
-        let base64_tx_bytes = base64::encode(tx);
+    pub fn simulate_tx_bytes(
+        &self,
+        tx_bytes: &[u8],
+    ) -> RunnerResult<cosmrs::proto::cosmos::base::abci::v1beta1::GasInfo> {
+        let base64_tx_bytes = BASE64_STANDARD.encode(tx_bytes);
         redefine_as_go_string!(base64_tx_bytes);
 
         unsafe {
@@ -223,7 +241,8 @@ impl BaseApp {
                 .map_err(RunnerError::DecodeError)
         }
     }
-    fn estimate_fee<I>(&self, msgs: I, signer: &SigningAccount) -> RunnerResult<Fee>
+
+    fn calculate_fee<I>(&self, msgs: I, signer: &SigningAccount) -> RunnerResult<Fee>
     where
         I: IntoIterator<Item = cosmrs::Any>,
     {
@@ -270,7 +289,7 @@ impl BaseApp {
         unsafe {
             BeginBlock(self.id);
             let pset = Message::encode_to_vec(&pset.into());
-            let pset = base64::encode(pset);
+            let pset = BASE64_STANDARD.encode(pset);
             redefine_as_go_string!(pset);
             redefine_as_go_string!(subspace);
             let res = SetParamSet(self.id, subspace, pset);
@@ -346,7 +365,7 @@ impl<'a> Runner<'a> for BaseApp {
         unsafe {
             self.run_block(|| {
                 let fee = match &signer.fee_setting() {
-                    FeeSetting::Auto { .. } => self.estimate_fee(msgs.clone(), signer)?,
+                    FeeSetting::Auto { .. } => self.calculate_fee(msgs.clone(), signer)?,
                     FeeSetting::Custom { amount, gas_limit } => Fee::from_amount_and_gas(
                         cosmrs::Coin {
                             denom: amount.denom.parse().unwrap(),
@@ -362,7 +381,7 @@ impl<'a> Runner<'a> for BaseApp {
                 RequestDeliverTx::encode(&RequestDeliverTx { tx: tx.into() }, &mut buf)
                     .map_err(EncodeError::ProtoEncodeError)?;
 
-                let base64_req = base64::encode(buf);
+                let base64_req = BASE64_STANDARD.encode(buf);
                 redefine_as_go_string!(base64_req);
 
                 let res = Execute(self.id, base64_req);
@@ -384,7 +403,7 @@ impl<'a> Runner<'a> for BaseApp {
 
         Q::encode(q, &mut buf).map_err(EncodeError::ProtoEncodeError)?;
 
-        let base64_query_msg_bytes = base64::encode(buf);
+        let base64_query_msg_bytes = BASE64_STANDARD.encode(buf);
         redefine_as_go_string!(path);
         redefine_as_go_string!(base64_query_msg_bytes);
 
