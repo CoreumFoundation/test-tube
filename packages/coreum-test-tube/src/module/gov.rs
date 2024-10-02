@@ -52,7 +52,7 @@ mod tests {
         let gov = Gov::new(&app);
 
         let proposer = app
-            .init_account(&[cosmwasm_std::Coin::new(1000000000000000000, FEE_DENOM)])
+            .init_account(&[cosmwasm_std::Coin::new(1000000000000000000u128, FEE_DENOM)])
             .unwrap();
 
         let params = gov
