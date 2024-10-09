@@ -52,11 +52,14 @@ func InitTestEnv() uint64 {
 	// Allow testing unoptimized contract
 	wasmtypes.MaxWasmSize = 1024 * 1024 * 1024 * 1024 * 1024
 
-	env.Ctx = env.App.BaseApp.NewContext(false, tmproto.Header{Height: 0, ChainID: string(testenv.NetworkConfig.ChainID()), Time: time.Now().UTC()})
+	env.Ctx = env.App.BaseApp.NewContextLegacy(false, tmproto.Header{Height: 0, ChainID: string(testenv.NetworkConfig.ChainID()), Time: time.Now().UTC()})
 
-	validators := env.App.StakingKeeper.GetAllValidators(env.Ctx)
+	validators, err := env.App.StakingKeeper.GetAllValidators(env.Ctx)
+	if err != nil {
+		panic(err)
+	}
 	valAddrFancy, _ := validators[0].GetConsAddr()
-	env.App.SlashingKeeper.SetValidatorSigningInfo(env.Ctx, valAddrFancy, slashingtypes.NewValidatorSigningInfo(
+	err = env.App.SlashingKeeper.SetValidatorSigningInfo(env.Ctx, valAddrFancy, slashingtypes.NewValidatorSigningInfo(
 		valAddrFancy,
 		0,
 		0,
@@ -64,11 +67,15 @@ func InitTestEnv() uint64 {
 		false,
 		0,
 	))
+	if err != nil {
+		panic(err)
+	}
 
-	env.BeginNewBlock(5)
-	reqEndBlock := abci.RequestEndBlock{Height: env.Ctx.BlockHeight()}
-	env.App.EndBlock(reqEndBlock)
-	env.App.Commit()
+	env.FinalizeBlock(5)
+	_, err = env.App.Commit()
+	if err != nil {
+		panic(err)
+	}
 
 	envCounter += 1
 	id := envCounter
@@ -103,7 +110,7 @@ func InitAccount(envId uint64, coinsJson string) *C.char {
 	priv := secp256k1.GenPrivKey()
 	accAddr := sdk.AccAddress(priv.PubKey().Address())
 
-	err := testutil.FundAccount(env.App.BankKeeper, env.Ctx, accAddr, coins)
+	err := testutil.FundAccount(env.Ctx, env.App.BankKeeper, accAddr, coins)
 	if err != nil {
 		panic(errors.Wrapf(err, "Failed to fund account"))
 	}
@@ -118,24 +125,18 @@ func InitAccount(envId uint64, coinsJson string) *C.char {
 //export IncreaseTime
 func IncreaseTime(envId, seconds uint64) {
 	env := loadEnv(envId)
-	env.BeginNewBlock(seconds)
-	envRegister.Store(envId, env)
-	EndBlock(envId)
-}
-
-//export BeginBlock
-func BeginBlock(envId uint64) {
-	env := loadEnv(envId)
-	env.BeginNewBlock(1)
+	env.FinalizeBlock(seconds)
 	envRegister.Store(envId, env)
 }
 
-//export EndBlock
-func EndBlock(envId uint64) {
+//export FinalizeBlock
+func FinalizeBlock(envId uint64) {
 	env := loadEnv(envId)
-	reqEndBlock := abci.RequestEndBlock{Height: env.Ctx.BlockHeight()}
-	env.App.EndBlock(reqEndBlock)
-	env.App.Commit()
+	env.FinalizeBlock(1)
+	_, err := env.App.Commit()
+	if err != nil {
+		panic(err)
+	}
 	envRegister.Store(envId, env)
 }
 
@@ -151,14 +152,11 @@ func Execute(envId uint64, base64ReqDeliverTx string) *C.char {
 		panic(err)
 	}
 
-	reqDeliverTx := abci.RequestDeliverTx{}
-	err = proto.Unmarshal(reqDeliverTxBytes, &reqDeliverTx)
+	_, resDeliverTx, err := env.App.Simulate(reqDeliverTxBytes)
 	if err != nil {
-		return encodeErrToResultBytes(result.ExecuteError, err)
+		panic(err)
 	}
-
-	resDeliverTx := env.App.DeliverTx(reqDeliverTx)
-	bz, err := proto.Marshal(&resDeliverTx)
+	bz, err := proto.Marshal(resDeliverTx)
 	if err != nil {
 		panic(err)
 	}
@@ -184,7 +182,7 @@ func Query(envId uint64, path, base64QueryMsgBytes string) *C.char {
 		err := errors.New("No route found for `" + path + "`")
 		return encodeErrToResultBytes(result.QueryError, err)
 	}
-	res, err := route(env.Ctx, req)
+	res, err := route(env.Ctx, &req)
 	if err != nil {
 		return encodeErrToResultBytes(result.QueryError, err)
 	}
@@ -280,14 +278,14 @@ func SetParamSet(envId uint64, subspaceName, base64ParamSetBytes string) *C.char
 
 	pReg := env.ParamTypesRegistry
 
-	any := codectypes.Any{}
-	err = proto.Unmarshal(paramSetBytes, &any)
+	anyObj := codectypes.Any{}
+	err = proto.Unmarshal(paramSetBytes, &anyObj)
 
 	if err != nil {
 		return encodeErrToResultBytes(result.ExecuteError, err)
 	}
 
-	pset, err := pReg.UnpackAny(&any)
+	pset, err := pReg.UnpackAny(&anyObj)
 	if err != nil {
 		return encodeErrToResultBytes(result.ExecuteError, err)
 	}
