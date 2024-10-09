@@ -145,7 +145,7 @@ func BeginBlock(envId uint64) {
 //export EndBlock
 func EndBlock(envId uint64) {
 	env := loadEnv(envId)
-	reqFinalizeBlock := &abci.RequestFinalizeBlock{Height: env.Ctx.BlockHeight()}
+	reqFinalizeBlock := &abci.RequestFinalizeBlock{Height: env.Ctx.BlockHeight(), Time: env.Ctx.BlockTime()}
 	_, err := env.App.FinalizeBlock(reqFinalizeBlock)
 	if err != nil {
 		panic(err)
