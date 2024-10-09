@@ -3,7 +3,7 @@ use std::ffi::CString;
 use base64::engine::general_purpose::STANDARD as BASE64_STANDARD;
 use base64::Engine;
 use cosmrs::crypto::secp256k1::SigningKey;
-use cosmrs::proto::tendermint::v0_37::abci::{RequestDeliverTx, ResponseDeliverTx};
+use cosmrs::proto::cosmos::base::abci::v1beta1::SimulationResponse;
 use cosmrs::tx::{Fee, SignerInfo};
 use cosmrs::{tx, Any};
 use cosmwasm_std::{Coin, Timestamp};
@@ -11,9 +11,9 @@ use prost::Message;
 
 use crate::account::{Account, FeeSetting, SigningAccount};
 use crate::bindings::{
-    AccountNumber, AccountSequence, CleanUp, Execute, FinalizeBlock, GetBlockHeight,
-    GetBlockTime, GetParamSet, GetValidatorAddress, GetValidatorPrivateKey, IncreaseTime,
-    InitAccount, InitTestEnv, Query, SetParamSet, Simulate,
+    AccountNumber, AccountSequence, BeginBlock, CleanUp, EndBlock, Execute, GetBlockHeight, GetBlockTime,
+    GetParamSet, GetValidatorAddress, GetValidatorPrivateKey, IncreaseTime, InitAccount,
+    InitTestEnv, Query, SetParamSet, Simulate,
 };
 use crate::redefine_as_go_string;
 use crate::runner::error::{DecodeError, EncodeError, RunnerError};
@@ -125,8 +125,9 @@ impl BaseApp {
         redefine_as_go_string!(coins_json);
 
         let base64_priv = unsafe {
+            BeginBlock(self.id);
             let addr = InitAccount(self.id, coins_json);
-            FinalizeBlock(self.id);
+            EndBlock(self.id);
             CString::from_raw(addr)
         }
         .to_str()
@@ -270,13 +271,14 @@ impl BaseApp {
     /// Ensure that all execution that happens in `execution` happens in a block
     /// and end block properly, no matter it suceeds or fails.
     unsafe fn run_block<T, E>(&self, execution: impl Fn() -> Result<T, E>) -> Result<T, E> {
+        unsafe { BeginBlock(self.id) };
         match execution() {
             ok @ Ok(_) => {
-                unsafe { FinalizeBlock(self.id) };
+                unsafe { EndBlock(self.id) };
                 ok
             }
             err @ Err(_) => {
-                unsafe { FinalizeBlock(self.id) };
+                unsafe { EndBlock(self.id) };
                 err
             }
         }
@@ -285,13 +287,14 @@ impl BaseApp {
     /// Set parameter set for a given subspace.
     pub fn set_param_set(&self, subspace: &str, pset: impl Into<Any>) -> RunnerResult<()> {
         unsafe {
+            BeginBlock(self.id);
             let pset = Message::encode_to_vec(&pset.into());
             let pset = BASE64_STANDARD.encode(pset);
             redefine_as_go_string!(pset);
             redefine_as_go_string!(subspace);
             let res = SetParamSet(self.id, subspace, pset);
 
-            FinalizeBlock(self.id);
+            EndBlock(self.id);
 
             // returns empty bytes if success
             RawResult::from_non_null_ptr(res).into_result()?;
@@ -374,17 +377,13 @@ impl<'a> Runner<'a> for BaseApp {
 
                 let tx = self.create_signed_tx(msgs.clone(), signer, fee)?;
 
-                let mut buf = Vec::new();
-                RequestDeliverTx::encode(&RequestDeliverTx { tx: tx.into() }, &mut buf)
-                    .map_err(EncodeError::ProtoEncodeError)?;
-
-                let base64_req = BASE64_STANDARD.encode(buf);
+                let base64_req = BASE64_STANDARD.encode(tx);
                 redefine_as_go_string!(base64_req);
 
                 let res = Execute(self.id, base64_req);
                 let res = RawResult::from_non_null_ptr(res).into_result()?;
 
-                ResponseDeliverTx::decode(res.as_slice())
+                SimulationResponse::decode(res.as_slice())
                     .map_err(DecodeError::ProtoDecodeError)?
                     .try_into()
             })

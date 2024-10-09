@@ -1,9 +1,9 @@
 use crate::{fn_execute, fn_query};
 
 use coreum_wasm_sdk::types::cosmos::authz::v1beta1::{
-    MsgExec, MsgExecResponse, MsgGrant, MsgGrantResponse, MsgRevokeResponse,
+    MsgExec, MsgExecResponse, MsgGrant, MsgGrantResponse, MsgRevoke, MsgRevokeResponse,
     QueryGranteeGrantsRequest, QueryGranteeGrantsResponse, QueryGranterGrantsRequest,
-    QueryGranterGrantsResponse, QueryGrantsRequest, QueryGrantsResponse, MsgRevoke,
+    QueryGranterGrantsResponse, QueryGrantsRequest, QueryGrantsResponse,
 };
 use test_tube_coreum::module::Module;
 use test_tube_coreum::runner::Runner;
@@ -49,6 +49,7 @@ where
 
 #[cfg(test)]
 mod tests {
+    use coreum_wasm_sdk::shim::Any;
     use coreum_wasm_sdk::types::coreum::asset::nft::v1::{
         MsgIssueClass, MsgMint, NftIdentifier, SendAuthorization,
     };
@@ -117,21 +118,24 @@ mod tests {
 
         assert_eq!(owner_response.owner, signer.address());
 
+        let send_authorization = SendAuthorization {
+            nfts: vec![NftIdentifier {
+                class_id: class_id.clone(),
+                id: "test1".to_string(),
+            }],
+        }
+        .to_any();
+
         authz
             .grant(
                 MsgGrant {
                     granter: signer.address(),
                     grantee: grantee.address(),
                     grant: Some(Grant {
-                        authorization: Some(
-                            SendAuthorization {
-                                nfts: vec![NftIdentifier {
-                                    class_id: class_id.clone(),
-                                    id: "test1".to_string(),
-                                }],
-                            }
-                            .to_any(),
-                        ),
+                        authorization: Some(Any {
+                            type_url: send_authorization.type_url,
+                            value: send_authorization.value.to_vec(),
+                        }),
                         expiration: None,
                     }),
                 },
@@ -161,7 +165,10 @@ mod tests {
             .exec(
                 MsgExec {
                     grantee: grantee.address(),
-                    msgs: vec![send_msg.to_any()],
+                    msgs: vec![Any {
+                        type_url: send_msg.to_any().type_url,
+                        value: send_msg.to_any().value.to_vec(),
+                    }],
                 },
                 &grantee,
             )

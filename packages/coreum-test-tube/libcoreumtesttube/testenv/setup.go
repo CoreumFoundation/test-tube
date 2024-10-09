@@ -135,12 +135,12 @@ func SetupApp(nodeHome string) (*coreumapp.App, []byte) {
 	return appInstance, validatorKey.Bytes()
 }
 
-func (env *TestEnv) FinalizeBlock(timeIncreaseSeconds uint64) {
+func (env *TestEnv) BeginNewBlock(timeIncreaseSeconds uint64) {
 	var valAddr []byte
 
 	validators, err := env.App.StakingKeeper.GetAllValidators(env.Ctx)
 	if err != nil {
-		panic(errors.Errorf("can't finalize block: %s", err))
+		panic(errors.Errorf("can't begin new block: %s", err))
 	}
 	if len(validators) >= 1 {
 		valAddrFancy, err := validators[0].GetConsAddr()
@@ -153,7 +153,7 @@ func (env *TestEnv) FinalizeBlock(timeIncreaseSeconds uint64) {
 		valAddr = valAddr2
 	}
 
-	env.finalizeBlockWithProposer(valAddr, timeIncreaseSeconds)
+	env.beginNewBlockWithProposer(valAddr, timeIncreaseSeconds)
 }
 
 func (env *TestEnv) GetValidatorAddresses() []string {
@@ -173,12 +173,12 @@ func (env *TestEnv) GetValidatorPrivateKey() []byte {
 	return env.Validator
 }
 
-// finalizeBlockWithProposer finalizes block with a proposer.
-func (env *TestEnv) finalizeBlockWithProposer(proposer sdk.ConsAddress, timeIncreaseSeconds uint64) {
+// beginNewBlockWithProposer begins a new block with a proposer.
+func (env *TestEnv) beginNewBlockWithProposer(proposer sdk.ConsAddress, timeIncreaseSeconds uint64) {
 	validator, err := env.App.StakingKeeper.GetValidatorByConsAddr(env.Ctx, proposer)
 
 	if err != nil {
-		panic(errors.Errorf("can't finalize block: %s", err))
+		panic(errors.Errorf("can't begin a new block: %s", err))
 	}
 
 	valAddr, err := validator.GetConsAddr()
@@ -202,7 +202,7 @@ func (env *TestEnv) finalizeBlockWithProposer(proposer sdk.ConsAddress, timeIncr
 	}
 	_, err = env.App.FinalizeBlock(requestFinalizeBlock)
 	if err != nil {
-		panic(errors.Errorf("can't finalize block: %s", err))
+		panic(errors.Errorf("can't begin a new block: %s", err))
 	}
 	env.Ctx = env.App.NewContextLegacy(false, header)
 }

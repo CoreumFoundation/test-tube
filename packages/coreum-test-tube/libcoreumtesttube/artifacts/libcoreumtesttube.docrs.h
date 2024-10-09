@@ -76,7 +76,8 @@ extern "C" {
 
 extern GoUint64 InitTestEnv();
 extern char* InitAccount(GoUint64 envId, GoString coinsJson);
-extern void FinalizeBlock(GoUint64 envId);
+extern void BeginBlock(GoUint64 envId);
+extern void EndBlock(GoUint64 envId);
 extern char* Execute(GoUint64 envId, GoString base64ReqDeliverTx);
 extern char* Query(GoUint64 envId, GoString path, GoString base64QueryMsgBytes);
 extern GoUint64 AccountSequence(GoUint64 envId, GoString bech32Address);

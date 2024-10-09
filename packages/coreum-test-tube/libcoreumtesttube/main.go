@@ -71,7 +71,12 @@ func InitTestEnv() uint64 {
 		panic(err)
 	}
 
-	env.FinalizeBlock(5)
+	env.BeginNewBlock(5)
+	reqFinalizeBlock := &abci.RequestFinalizeBlock{Height: env.Ctx.BlockHeight()}
+	_, err = env.App.FinalizeBlock(reqFinalizeBlock)
+	if err != nil {
+		panic(err)
+	}
 	_, err = env.App.Commit()
 	if err != nil {
 		panic(err)
@@ -125,15 +130,27 @@ func InitAccount(envId uint64, coinsJson string) *C.char {
 //export IncreaseTime
 func IncreaseTime(envId, seconds uint64) {
 	env := loadEnv(envId)
-	env.FinalizeBlock(seconds)
+	env.BeginNewBlock(seconds)
+	envRegister.Store(envId, env)
+	EndBlock(envId)
+}
+
+//export BeginBlock
+func BeginBlock(envId uint64) {
+	env := loadEnv(envId)
+	env.BeginNewBlock(1)
 	envRegister.Store(envId, env)
 }
 
-//export FinalizeBlock
-func FinalizeBlock(envId uint64) {
+//export EndBlock
+func EndBlock(envId uint64) {
 	env := loadEnv(envId)
-	env.FinalizeBlock(1)
-	_, err := env.App.Commit()
+	reqFinalizeBlock := &abci.RequestFinalizeBlock{Height: env.Ctx.BlockHeight()}
+	_, err := env.App.FinalizeBlock(reqFinalizeBlock)
+	if err != nil {
+		panic(err)
+	}
+	_, err = env.App.Commit()
 	if err != nil {
 		panic(err)
 	}
@@ -141,22 +158,28 @@ func FinalizeBlock(envId uint64) {
 }
 
 //export Execute
-func Execute(envId uint64, base64ReqDeliverTx string) *C.char {
+func Execute(envId uint64, base64Tx string) *C.char {
 	env := loadEnv(envId)
 	// Temp fix for concurrency issue
 	mu.Lock()
 	defer mu.Unlock()
 
-	reqDeliverTxBytes, err := base64.StdEncoding.DecodeString(base64ReqDeliverTx)
+	txBytes, err := base64.StdEncoding.DecodeString(base64Tx)
 	if err != nil {
 		panic(err)
 	}
 
-	_, resDeliverTx, err := env.App.Simulate(reqDeliverTxBytes)
+	gasInfo, resDeliverTx, err := env.App.SimDeliver(func(tx sdk.Tx) ([]byte, error) {
+		return txBytes, nil
+	}, nil)
 	if err != nil {
 		panic(err)
 	}
-	bz, err := proto.Marshal(resDeliverTx)
+	res := sdk.SimulationResponse{
+		GasInfo: gasInfo,
+		Result:  resDeliverTx,
+	}
+	bz, err := proto.Marshal(&res)
 	if err != nil {
 		panic(err)
 	}
