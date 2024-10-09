@@ -195,8 +195,8 @@ func (env *TestEnv) finalizeBlockWithProposer(proposer sdk.ConsAddress, timeIncr
 				Validator: abci.Validator{Address: valAddr, Power: 1000},
 			}},
 		},
-		Height:             env.Ctx.BlockHeight() + 1,
-		Time:               newBlockTime,
+		Height:             newCtx.BlockHeight(),
+		Time:               newCtx.BlockTime(),
 		NextValidatorsHash: nil,
 		ProposerAddress:    valAddr,
 	}
