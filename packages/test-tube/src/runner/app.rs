@@ -11,7 +11,7 @@ use prost::Message;
 
 use crate::account::{Account, FeeSetting, SigningAccount};
 use crate::bindings::{
-    AccountNumber, AccountSequence, BeginBlock, CleanUp, EndBlock, Execute, GetBlockHeight,
+    AccountNumber, AccountSequence, CleanUp, Execute, FinalizeBlock, GetBlockHeight,
     GetBlockTime, GetParamSet, GetValidatorAddress, GetValidatorPrivateKey, IncreaseTime,
     InitAccount, InitTestEnv, Query, SetParamSet, Simulate,
 };
@@ -125,9 +125,8 @@ impl BaseApp {
         redefine_as_go_string!(coins_json);
 
         let base64_priv = unsafe {
-            BeginBlock(self.id);
             let addr = InitAccount(self.id, coins_json);
-            EndBlock(self.id);
+            FinalizeBlock(self.id);
             CString::from_raw(addr)
         }
         .to_str()
@@ -271,14 +270,13 @@ impl BaseApp {
     /// Ensure that all execution that happens in `execution` happens in a block
     /// and end block properly, no matter it suceeds or fails.
     unsafe fn run_block<T, E>(&self, execution: impl Fn() -> Result<T, E>) -> Result<T, E> {
-        unsafe { BeginBlock(self.id) };
         match execution() {
             ok @ Ok(_) => {
-                unsafe { EndBlock(self.id) };
+                unsafe { FinalizeBlock(self.id) };
                 ok
             }
             err @ Err(_) => {
-                unsafe { EndBlock(self.id) };
+                unsafe { FinalizeBlock(self.id) };
                 err
             }
         }
@@ -287,14 +285,13 @@ impl BaseApp {
     /// Set parameter set for a given subspace.
     pub fn set_param_set(&self, subspace: &str, pset: impl Into<Any>) -> RunnerResult<()> {
         unsafe {
-            BeginBlock(self.id);
             let pset = Message::encode_to_vec(&pset.into());
             let pset = BASE64_STANDARD.encode(pset);
             redefine_as_go_string!(pset);
             redefine_as_go_string!(subspace);
             let res = SetParamSet(self.id, subspace, pset);
 
-            EndBlock(self.id);
+            FinalizeBlock(self.id);
 
             // returns empty bytes if success
             RawResult::from_non_null_ptr(res).into_result()?;

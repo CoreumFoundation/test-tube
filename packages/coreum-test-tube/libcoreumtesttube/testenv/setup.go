@@ -140,7 +140,7 @@ func (env *TestEnv) FinalizeBlock(timeIncreaseSeconds uint64) {
 
 	validators, err := env.App.StakingKeeper.GetAllValidators(env.Ctx)
 	if err != nil {
-		panic(errors.Errorf("can't begin new block: %s", err))
+		panic(errors.Errorf("can't finalize block: %s", err))
 	}
 	if len(validators) >= 1 {
 		valAddrFancy, err := validators[0].GetConsAddr()
@@ -173,7 +173,7 @@ func (env *TestEnv) GetValidatorPrivateKey() []byte {
 	return env.Validator
 }
 
-// finalizeBlockWithProposer begins a new block with a proposer.
+// finalizeBlockWithProposer finalizes block with a proposer.
 func (env *TestEnv) finalizeBlockWithProposer(proposer sdk.ConsAddress, timeIncreaseSeconds uint64) {
 	validator, err := env.App.StakingKeeper.GetValidatorByConsAddr(env.Ctx, proposer)
 
