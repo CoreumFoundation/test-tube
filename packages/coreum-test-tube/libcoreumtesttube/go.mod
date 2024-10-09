@@ -26,7 +26,7 @@ replace (
 
 require (
 	cosmossdk.io/math v1.3.0
-	github.com/CoreumFoundation/coreum/v5 v5.0.0-20241002100003-2dcad94c2fbc
+	github.com/CoreumFoundation/coreum/v5 v5.0.0-20241009074022-8788daec307f
 	github.com/CosmWasm/wasmd v0.53.0
 	github.com/cometbft/cometbft v0.38.11
 	github.com/cosmos/cosmos-db v1.0.2
