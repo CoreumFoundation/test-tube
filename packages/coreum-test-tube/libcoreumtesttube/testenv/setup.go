@@ -214,6 +214,7 @@ func (env *TestEnv) setupValidator(bondStatus stakingtypes.BondStatus) sdk.ValAd
 
 	params, err := env.App.StakingKeeper.GetParams(env.Ctx)
 	requireNoErr(err)
+	requireNoErr(err)
 	bondDenom := params.BondDenom
 	selfBond := sdk.NewCoins(sdk.Coin{Amount: math.NewInt(100), Denom: bondDenom})
 
@@ -287,7 +288,7 @@ func newNetworkConfig() coreumconfig.NetworkConfig {
 				GenesisTime:   time.Now(),
 				Denom:         coreumconstant.DenomMain,
 				GovConfig: coreumconfig.GenesisInitGovConfig{
-					MinDeposit:   sdk.Coins{sdk.NewCoin(coreumconstant.DenomDev, math.NewInt(1000))},
+					MinDeposit:   sdk.Coins{sdk.NewCoin(coreumconstant.Denom, math.NewInt(1000))},
 					VotingPeriod: time.Second * 10,
 				},
 				CustomParamsConfig: coreumconfig.GenesisInitCustomParamsConfig{
