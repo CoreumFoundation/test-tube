@@ -52,11 +52,14 @@ func InitTestEnv() uint64 {
 	// Allow testing unoptimized contract
 	wasmtypes.MaxWasmSize = 1024 * 1024 * 1024 * 1024 * 1024
 
-	env.Ctx = env.App.BaseApp.NewContext(false, tmproto.Header{Height: 0, ChainID: string(testenv.NetworkConfig.ChainID()), Time: time.Now().UTC()})
+	env.Ctx = env.App.BaseApp.NewContextLegacy(false, tmproto.Header{Height: 0, ChainID: string(testenv.NetworkConfig.ChainID()), Time: time.Now().UTC()})
 
-	validators := env.App.StakingKeeper.GetAllValidators(env.Ctx)
+	validators, err := env.App.StakingKeeper.GetAllValidators(env.Ctx)
+	if err != nil {
+		panic(err)
+	}
 	valAddrFancy, _ := validators[0].GetConsAddr()
-	env.App.SlashingKeeper.SetValidatorSigningInfo(env.Ctx, valAddrFancy, slashingtypes.NewValidatorSigningInfo(
+	err = env.App.SlashingKeeper.SetValidatorSigningInfo(env.Ctx, valAddrFancy, slashingtypes.NewValidatorSigningInfo(
 		valAddrFancy,
 		0,
 		0,
@@ -64,11 +67,20 @@ func InitTestEnv() uint64 {
 		false,
 		0,
 	))
+	if err != nil {
+		panic(err)
+	}
 
 	env.BeginNewBlock(5)
-	reqEndBlock := abci.RequestEndBlock{Height: env.Ctx.BlockHeight()}
-	env.App.EndBlock(reqEndBlock)
-	env.App.Commit()
+	reqFinalizeBlock := &abci.RequestFinalizeBlock{Height: env.Ctx.BlockHeight()}
+	_, err = env.App.FinalizeBlock(reqFinalizeBlock)
+	if err != nil {
+		panic(err)
+	}
+	_, err = env.App.Commit()
+	if err != nil {
+		panic(err)
+	}
 
 	envCounter += 1
 	id := envCounter
@@ -103,7 +115,7 @@ func InitAccount(envId uint64, coinsJson string) *C.char {
 	priv := secp256k1.GenPrivKey()
 	accAddr := sdk.AccAddress(priv.PubKey().Address())
 
-	err := testutil.FundAccount(env.App.BankKeeper, env.Ctx, accAddr, coins)
+	err := testutil.FundAccount(env.Ctx, env.App.BankKeeper, accAddr, coins)
 	if err != nil {
 		panic(errors.Wrapf(err, "Failed to fund account"))
 	}
@@ -133,32 +145,41 @@ func BeginBlock(envId uint64) {
 //export EndBlock
 func EndBlock(envId uint64) {
 	env := loadEnv(envId)
-	reqEndBlock := abci.RequestEndBlock{Height: env.Ctx.BlockHeight()}
-	env.App.EndBlock(reqEndBlock)
-	env.App.Commit()
+	reqFinalizeBlock := &abci.RequestFinalizeBlock{Height: env.Ctx.BlockHeight(), Time: env.Ctx.BlockTime()}
+	_, err := env.App.FinalizeBlock(reqFinalizeBlock)
+	if err != nil {
+		panic(err)
+	}
+	_, err = env.App.Commit()
+	if err != nil {
+		panic(err)
+	}
 	envRegister.Store(envId, env)
 }
 
 //export Execute
-func Execute(envId uint64, base64ReqDeliverTx string) *C.char {
+func Execute(envId uint64, base64Tx string) *C.char {
 	env := loadEnv(envId)
 	// Temp fix for concurrency issue
 	mu.Lock()
 	defer mu.Unlock()
 
-	reqDeliverTxBytes, err := base64.StdEncoding.DecodeString(base64ReqDeliverTx)
+	txBytes, err := base64.StdEncoding.DecodeString(base64Tx)
 	if err != nil {
 		panic(err)
 	}
 
-	reqDeliverTx := abci.RequestDeliverTx{}
-	err = proto.Unmarshal(reqDeliverTxBytes, &reqDeliverTx)
+	gasInfo, resDeliverTx, err := env.App.SimDeliver(func(tx sdk.Tx) ([]byte, error) {
+		return txBytes, nil
+	}, nil)
 	if err != nil {
-		return encodeErrToResultBytes(result.ExecuteError, err)
+		panic(err)
 	}
-
-	resDeliverTx := env.App.DeliverTx(reqDeliverTx)
-	bz, err := proto.Marshal(&resDeliverTx)
+	res := sdk.SimulationResponse{
+		GasInfo: gasInfo,
+		Result:  resDeliverTx,
+	}
+	bz, err := proto.Marshal(&res)
 	if err != nil {
 		panic(err)
 	}
@@ -184,7 +205,7 @@ func Query(envId uint64, path, base64QueryMsgBytes string) *C.char {
 		err := errors.New("No route found for `" + path + "`")
 		return encodeErrToResultBytes(result.QueryError, err)
 	}
-	res, err := route(env.Ctx, req)
+	res, err := route(env.Ctx, &req)
 	if err != nil {
 		return encodeErrToResultBytes(result.QueryError, err)
 	}
@@ -280,14 +301,14 @@ func SetParamSet(envId uint64, subspaceName, base64ParamSetBytes string) *C.char
 
 	pReg := env.ParamTypesRegistry
 
-	any := codectypes.Any{}
-	err = proto.Unmarshal(paramSetBytes, &any)
+	anyObj := codectypes.Any{}
+	err = proto.Unmarshal(paramSetBytes, &anyObj)
 
 	if err != nil {
 		return encodeErrToResultBytes(result.ExecuteError, err)
 	}
 
-	pset, err := pReg.UnpackAny(&any)
+	pset, err := pReg.UnpackAny(&anyObj)
 	if err != nil {
 		return encodeErrToResultBytes(result.ExecuteError, err)
 	}
