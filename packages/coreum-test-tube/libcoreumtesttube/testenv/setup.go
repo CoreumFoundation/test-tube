@@ -288,7 +288,7 @@ func newNetworkConfig() coreumconfig.NetworkConfig {
 				GenesisTime:   time.Now(),
 				Denom:         coreumconstant.DenomMain,
 				GovConfig: coreumconfig.GenesisInitGovConfig{
-					MinDeposit:   sdk.Coins{sdk.NewCoin(coreumconstant.Denom, math.NewInt(1000))},
+					MinDeposit:   sdk.Coins{sdk.NewCoin(coreumconstant.DenomMain, math.NewInt(1000))},
 					VotingPeriod: time.Second * 10,
 				},
 				CustomParamsConfig: coreumconfig.GenesisInitCustomParamsConfig{
