@@ -3,9 +3,9 @@ use coreum_wasm_sdk::types::cosmos::gov::v1beta1::{
     QueryParamsResponse, QueryProposalRequest, QueryProposalResponse,
 };
 
-use test_tube_coreum::{fn_execute, fn_query};
 use test_tube_coreum::module::Module;
 use test_tube_coreum::runner::Runner;
+use test_tube_coreum::{fn_execute, fn_query};
 
 pub struct Gov<'a, R: Runner<'a>> {
     runner: &'a R,
@@ -41,8 +41,10 @@ where
 #[cfg(test)]
 mod tests {
     use crate::{runner::app::FEE_DENOM, CoreumTestApp};
-    use crate::{Account, Module, Gov, RunnerError};
-    use coreum_wasm_sdk::types::cosmos::gov::v1beta1::{QueryParamsRequest, MsgSubmitProposal, QueryProposalRequest};
+    use crate::{Account, Gov, Module, RunnerError};
+    use coreum_wasm_sdk::types::cosmos::gov::v1beta1::{
+        MsgSubmitProposal, QueryParamsRequest, QueryProposalRequest,
+    };
     use coreum_wasm_sdk::{shim::Any, types::cosmos::gov::v1beta1::TextProposal};
     use test_tube_coreum::cosmrs::tx::MessageExt;
 

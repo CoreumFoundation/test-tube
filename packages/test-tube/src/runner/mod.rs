@@ -53,7 +53,7 @@ pub trait Runner<'a> {
             .iter()
             .map(|msg| match msg {
                 CosmosMsg::Bank(msg) => bank_msg_to_any(msg, signer),
-                CosmosMsg::Any (AnyMsg{ type_url, value }) => Ok(cosmrs::Any {
+                CosmosMsg::Any(AnyMsg { type_url, value }) => Ok(cosmrs::Any {
                     type_url: type_url.clone(),
                     value: value.clone().to_vec(),
                 }),

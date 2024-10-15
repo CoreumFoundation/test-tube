@@ -2,7 +2,7 @@ use crate::runner::error::{DecodeError, RunnerError};
 use base64::engine::general_purpose::STANDARD as BASE64_STANDARD;
 use base64::Engine;
 use cosmrs::proto::cosmos::base::abci::v1beta1::{GasInfo, TxMsgData};
-use cosmrs::proto::tendermint::v0_37::abci::ResponseDeliverTx;
+use cosmrs::proto::cosmos::base::abci::v1beta1::SimulationResponse;
 use cosmrs::rpc::endpoint::broadcast::tx_commit::Response as TxCommitResponse;
 use cosmwasm_std::{Attribute, Event};
 use prost::Message;
@@ -23,25 +23,23 @@ where
     pub gas_info: GasInfo,
 }
 
-impl<R> TryFrom<ResponseDeliverTx> for ExecuteResponse<R>
+impl<R> TryFrom<SimulationResponse> for ExecuteResponse<R>
 where
     R: prost::Message + Default,
 {
     type Error = RunnerError;
 
-    fn try_from(res: ResponseDeliverTx) -> Result<Self, Self::Error> {
-        let tx_msg_data =
-            TxMsgData::decode(res.data.clone()).map_err(DecodeError::ProtoDecodeError)?;
-
-        let msg_data = &tx_msg_data
+    fn try_from(res: SimulationResponse) -> Result<Self, Self::Error> {
+        let result = res.clone().result.unwrap();
+        let msg_data = result
             .msg_responses
             // since this tx contains exactly 1 msg
             // when getting none of them, that means error
             .first()
-            .ok_or(RunnerError::ExecuteError { msg: res.log })?;
+            .ok_or(RunnerError::ExecuteError { msg: result.log })?;
         let data = R::decode(msg_data.value.as_slice()).map_err(DecodeError::ProtoDecodeError)?;
 
-        let events = res
+        let events = result
             .events
             .into_iter()
             .map(|e| -> Result<Event, DecodeError> {
@@ -50,8 +48,8 @@ where
                         .into_iter()
                         .map(|a| -> Result<Attribute, Utf8Error> {
                             Ok(Attribute {
-                                key: a.key,
-                                value: a.value,
+                                key: std::str::from_utf8(&a.key).unwrap_or_default().to_string(),
+                                value: std::str::from_utf8(&a.value).unwrap_or_default().to_string(),
                             })
                         })
                         .collect::<Result<Vec<Attribute>, Utf8Error>>()?,
@@ -59,13 +57,14 @@ where
             })
             .collect::<Result<Vec<Event>, DecodeError>>()?;
 
+        let result = res.clone().result.unwrap();
         Ok(ExecuteResponse {
             data,
-            raw_data: res.data.into(),
+            raw_data: result.clone().data,
             events,
             gas_info: GasInfo {
-                gas_wanted: res.gas_wanted as u64,
-                gas_used: res.gas_used as u64,
+                gas_wanted: res.clone().gas_info.unwrap().gas_wanted as u64,
+                gas_used: res.gas_info.unwrap().gas_used as u64,
             },
         })
     }

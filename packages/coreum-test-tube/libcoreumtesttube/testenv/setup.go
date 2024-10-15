@@ -1,17 +1,20 @@
 package testenv
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
 
-	dbm "github.com/cometbft/cometbft-db"
+	"cosmossdk.io/log"
+	"cosmossdk.io/math"
 	abci "github.com/cometbft/cometbft/abci/types"
-	"github.com/cometbft/cometbft/libs/log"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	tmtypes "github.com/cometbft/cometbft/types"
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	cosmosclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/server"
@@ -23,12 +26,13 @@ import (
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/pkg/errors"
 
-	coreumapp "github.com/CoreumFoundation/coreum/v4/app"
-	coreumconfig "github.com/CoreumFoundation/coreum/v4/pkg/config"
-	coreumconstant "github.com/CoreumFoundation/coreum/v4/pkg/config/constant"
-	assetfttypes "github.com/CoreumFoundation/coreum/v4/x/asset/ft/types"
-	assetnfttypes "github.com/CoreumFoundation/coreum/v4/x/asset/nft/types"
+	coreumapp "github.com/CoreumFoundation/coreum/v5/app"
+	coreumconfig "github.com/CoreumFoundation/coreum/v5/pkg/config"
+	coreumconstant "github.com/CoreumFoundation/coreum/v5/pkg/config/constant"
+	assetfttypes "github.com/CoreumFoundation/coreum/v5/x/asset/ft/types"
+	assetnfttypes "github.com/CoreumFoundation/coreum/v5/x/asset/nft/types"
 )
 
 var NetworkConfig coreumconfig.NetworkConfig
@@ -89,8 +93,13 @@ func SetupApp(nodeHome string) (*coreumapp.App, []byte) {
 	senderPrivKey := ed25519.GenPrivKey()
 	acc := authtypes.NewBaseAccount(senderPrivKey.PubKey().Address().Bytes(), senderPrivKey.PubKey(), 0, 0)
 
+	clientCtx := cosmosclient.Context{}.
+		WithCodec(appInstance.AppCodec()).
+		WithInterfaceRegistry(appInstance.InterfaceRegistry()).
+		WithTxConfig(appInstance.TxConfig())
+
 	// generate network state
-	genesisState, err := networkProvider.AppState()
+	genesisState, err := networkProvider.AppState(context.Background(), clientCtx, appInstance.BasicModuleManager)
 	requireNoErr(err)
 
 	// register the validator and account in the genesis
@@ -111,14 +120,17 @@ func SetupApp(nodeHome string) (*coreumapp.App, []byte) {
 	consensusParams.Block.MaxBytes = 22020096
 	consensusParams.Block.MaxGas = 50000000
 
-	appInstance.InitChain(
-		abci.RequestInitChain{
+	_, err = appInstance.InitChain(
+		&abci.RequestInitChain{
 			ChainId:         string(NetworkConfig.ChainID()),
 			Validators:      []abci.ValidatorUpdate{},
 			ConsensusParams: consensusParams,
 			AppStateBytes:   stateBytes,
 		},
 	)
+	if err != nil {
+		panic(errors.Errorf("can't init chain: %s", err))
+	}
 
 	return appInstance, validatorKey.Bytes()
 }
@@ -126,23 +138,29 @@ func SetupApp(nodeHome string) (*coreumapp.App, []byte) {
 func (env *TestEnv) BeginNewBlock(timeIncreaseSeconds uint64) {
 	var valAddr []byte
 
-	validators := env.App.StakingKeeper.GetAllValidators(env.Ctx)
+	validators, err := env.App.StakingKeeper.GetAllValidators(env.Ctx)
+	if err != nil {
+		panic(errors.Errorf("can't begin new block: %s", err))
+	}
 	if len(validators) >= 1 {
 		valAddrFancy, err := validators[0].GetConsAddr()
 		requireNoErr(err)
-		valAddr = valAddrFancy.Bytes()
+		valAddr = valAddrFancy
 	} else {
 		valAddrFancy := env.setupValidator(stakingtypes.Bonded)
 		validator, _ := env.App.StakingKeeper.GetValidator(env.Ctx, valAddrFancy)
 		valAddr2, _ := validator.GetConsAddr()
-		valAddr = valAddr2.Bytes()
+		valAddr = valAddr2
 	}
 
 	env.beginNewBlockWithProposer(valAddr, timeIncreaseSeconds)
 }
 
 func (env *TestEnv) GetValidatorAddresses() []string {
-	validators := env.App.StakingKeeper.GetAllValidators(env.Ctx)
+	validators, err := env.App.StakingKeeper.GetAllValidators(env.Ctx)
+	if err != nil {
+		panic(errors.Errorf("can't get validator addresses: %s", err))
+	}
 	var addresses []string
 	for _, validator := range validators {
 		addresses = append(addresses, validator.OperatorAddress)
@@ -157,31 +175,36 @@ func (env *TestEnv) GetValidatorPrivateKey() []byte {
 
 // beginNewBlockWithProposer begins a new block with a proposer.
 func (env *TestEnv) beginNewBlockWithProposer(proposer sdk.ConsAddress, timeIncreaseSeconds uint64) {
-	validator, found := env.App.StakingKeeper.GetValidatorByConsAddr(env.Ctx, proposer)
+	validator, err := env.App.StakingKeeper.GetValidatorByConsAddr(env.Ctx, proposer)
 
-	if !found {
-		panic("validator not found")
+	if err != nil {
+		panic(errors.Errorf("can't begin a new block: %s", err))
 	}
 
-	valConsAddr, err := validator.GetConsAddr()
+	valAddr, err := validator.GetConsAddr()
 	requireNoErr(err)
-
-	valAddr := valConsAddr.Bytes()
 
 	newBlockTime := env.Ctx.BlockTime().Add(time.Duration(timeIncreaseSeconds) * time.Second)
 	header := tmproto.Header{ChainID: string(NetworkConfig.ChainID()), Height: env.Ctx.BlockHeight() + 1, Time: newBlockTime}
 	newCtx := env.Ctx.WithBlockTime(newBlockTime).WithBlockHeight(env.Ctx.BlockHeight() + 1)
 	env.Ctx = newCtx
-	lastCommitInfo := abci.CommitInfo{
-		Votes: []abci.VoteInfo{{
-			Validator:       abci.Validator{Address: valAddr, Power: 1000},
-			SignedLastBlock: true,
-		}},
+	requestFinalizeBlock := &abci.RequestFinalizeBlock{
+		Txs: nil,
+		DecidedLastCommit: abci.CommitInfo{
+			Votes: []abci.VoteInfo{{
+				Validator: abci.Validator{Address: valAddr, Power: 1000},
+			}},
+		},
+		Height:             newCtx.BlockHeight(),
+		Time:               newCtx.BlockTime(),
+		NextValidatorsHash: nil,
+		ProposerAddress:    valAddr,
 	}
-	reqBeginBlock := abci.RequestBeginBlock{Header: header, LastCommitInfo: lastCommitInfo}
-
-	env.App.BeginBlock(reqBeginBlock)
-	env.Ctx = env.App.NewContext(false, reqBeginBlock.Header)
+	_, err = env.App.FinalizeBlock(requestFinalizeBlock)
+	if err != nil {
+		panic(errors.Errorf("can't begin a new block: %s", err))
+	}
+	env.Ctx = env.App.NewContextLegacy(false, header)
 }
 
 func (env *TestEnv) setupValidator(bondStatus stakingtypes.BondStatus) sdk.ValAddress {
@@ -189,17 +212,19 @@ func (env *TestEnv) setupValidator(bondStatus stakingtypes.BondStatus) sdk.ValAd
 	valPub := valPk.PubKey()
 	valAddr := sdk.ValAddress(valPub.Address())
 
-	bondDenom := env.App.StakingKeeper.GetParams(env.Ctx).BondDenom
-	selfBond := sdk.NewCoins(sdk.Coin{Amount: sdk.NewInt(100), Denom: bondDenom})
+	params, err := env.App.StakingKeeper.GetParams(env.Ctx)
+	requireNoErr(err)
+	bondDenom := params.BondDenom
+	selfBond := sdk.NewCoins(sdk.Coin{Amount: math.NewInt(100), Denom: bondDenom})
 
-	err := testutil.FundAccount(env.App.BankKeeper, env.Ctx, sdk.AccAddress(valPub.Address()), selfBond)
+	err = testutil.FundAccount(env.Ctx, env.App.BankKeeper, sdk.AccAddress(valPub.Address()), selfBond)
 	requireNoErr(err)
 
 	stakingHandler := stakingkeeper.NewMsgServerImpl(env.App.StakingKeeper)
 	stakingCoin := sdk.NewCoin(bondDenom, selfBond[0].Amount)
 
-	Commission := stakingtypes.NewCommissionRates(sdk.MustNewDecFromStr("0.05"), sdk.MustNewDecFromStr("0.05"), sdk.MustNewDecFromStr("0.05"))
-	msg, err := stakingtypes.NewMsgCreateValidator(valAddr, valPub, stakingCoin, stakingtypes.Description{}, Commission, sdk.OneInt())
+	Commission := stakingtypes.NewCommissionRates(math.LegacyMustNewDecFromStr("0.05"), math.LegacyMustNewDecFromStr("0.05"), math.LegacyMustNewDecFromStr("0.05"))
+	msg, err := stakingtypes.NewMsgCreateValidator(valAddr.String(), valPub, stakingCoin, stakingtypes.Description{}, Commission, math.OneInt())
 	requireNoErr(err)
 
 	res, err := stakingHandler.CreateValidator(env.Ctx, msg)
@@ -207,13 +232,15 @@ func (env *TestEnv) setupValidator(bondStatus stakingtypes.BondStatus) sdk.ValAd
 
 	requireNoNil("staking handler", res)
 
-	env.App.BankKeeper.SendCoinsFromModuleToModule(env.Ctx, stakingtypes.NotBondedPoolName, stakingtypes.BondedPoolName, sdk.NewCoins(stakingCoin))
+	err = env.App.BankKeeper.SendCoinsFromModuleToModule(env.Ctx, stakingtypes.NotBondedPoolName, stakingtypes.BondedPoolName, sdk.NewCoins(stakingCoin))
+	requireNoErr(err)
 
-	val, found := env.App.StakingKeeper.GetValidator(env.Ctx, valAddr)
-	requireTrue("validator found", found)
+	val, err := env.App.StakingKeeper.GetValidator(env.Ctx, valAddr)
+	requireNoErr(err)
 
 	val = val.UpdateStatus(bondStatus)
-	env.App.StakingKeeper.SetValidator(env.Ctx, val)
+	err = env.App.StakingKeeper.SetValidator(env.Ctx, val)
+	requireNoErr(err)
 
 	consAddr, err := val.GetConsAddr()
 	requireNoErr(err)
@@ -226,7 +253,8 @@ func (env *TestEnv) setupValidator(bondStatus stakingtypes.BondStatus) sdk.ValAd
 		false,
 		0,
 	)
-	env.App.SlashingKeeper.SetValidatorSigningInfo(env.Ctx, consAddr, signingInfo)
+	err = env.App.SlashingKeeper.SetValidatorSigningInfo(env.Ctx, consAddr, signingInfo)
+	requireNoErr(err)
 
 	return valAddr
 }
@@ -250,30 +278,20 @@ func requireNoNil(name string, nilable any) {
 	}
 }
 
-func requireTrue(name string, b bool) {
-	if !b {
-		panic(fmt.Sprintf("%s must be true", name))
-	}
-}
-
 func newNetworkConfig() coreumconfig.NetworkConfig {
 	networkConfig := coreumconfig.NetworkConfig{
 		Provider: coreumconfig.DynamicConfigProvider{
-			AddressPrefix:   coreumconstant.AddressPrefixMain,
-			GenesisTemplate: coreumconfig.GenesisV3Template,
-			ChainID:         coreumconstant.ChainIDMain,
-			GenesisTime:     time.Now(),
-			BlockTimeIota:   time.Second,
-			Denom:           coreumconstant.DenomMain,
-			GovConfig: coreumconfig.GovConfig{
-				ProposalConfig: coreumconfig.GovProposalConfig{
-					MinDepositAmount: "1000",
-					VotingPeriod:     (time.Second * 10).String(),
+			GenesisInitConfig: coreumconfig.GenesisInitConfig{
+				AddressPrefix: coreumconstant.AddressPrefixMain,
+				ChainID:       coreumconstant.ChainIDMain,
+				GenesisTime:   time.Now(),
+				Denom:         coreumconstant.DenomMain,
+				GovConfig: coreumconfig.GenesisInitGovConfig{
+					MinDeposit:   sdk.Coins{sdk.NewCoin(coreumconstant.DenomDev, math.NewInt(1000))},
+					VotingPeriod: time.Second * 10,
 				},
-			},
-			CustomParamsConfig: coreumconfig.CustomParamsConfig{
-				Staking: coreumconfig.CustomParamsStakingConfig{
-					MinSelfDelegation: sdk.NewInt(10_000_000), // 10 core
+				CustomParamsConfig: coreumconfig.GenesisInitCustomParamsConfig{
+					MinSelfDelegation: math.NewInt(10_000_000), // 10 core
 				},
 			},
 		},
