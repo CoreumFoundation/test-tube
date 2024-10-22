@@ -4,7 +4,7 @@ edition = "2021"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/CoreumFoundation/test-tube"
 name = "coreum-test-tube"
-version = "4.0.0"
+version = "4.1.0"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 exclude = ["coreum", "test_artifacts"]
@@ -12,13 +12,13 @@ exclude = ["coreum", "test_artifacts"]
 [dependencies]
 base64 = "0.21.5"
 cosmrs = { version = "0.16.0", features = ["cosmwasm"] }
-cosmwasm-std = "1.5.5"
+cosmwasm-std = { version = "2.1.4", features = ["cosmwasm_2_0"] }
 prost = "0.12.6"
 serde = "1.0.203"
 serde_json = "1.0.117"
-test-tube-coreum = { version = "0.2.0", path = "../test-tube" }
+test-tube-coreum = { version = "0.3.0", path = "../test-tube" }
 thiserror = "1.0.61"
-coreum-wasm-sdk = "1.0.0"
+coreum-wasm-sdk = {git = "https://github.com/CoreumFoundation/coreum-wasm-sdk.git", branch = "upgrade-cosmwasm-std"}
 
 [build-dependencies]
 bindgen = "0.69.4"
