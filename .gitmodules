@@ -1,4 +1,4 @@
 [submodule "packages/coreum-test-tube/coreum"]
 	path = packages/coreum-test-tube/coreum
 	url = https://github.com/CoreumFoundation/coreum
-	branch = master
+	branch = release-v4
