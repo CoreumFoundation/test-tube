@@ -141,6 +141,7 @@ mod tests {
                     uri: "test_uri".to_string(),
                     uri_hash: "test_uri_hash".to_string(),
                     extension_settings: None,
+                    dex_settings: None,
                 },
                 &signer,
             )
