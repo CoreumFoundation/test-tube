@@ -92,9 +92,8 @@ where
 
 #[cfg(test)]
 mod tests {
-    use coreum_wasm_sdk::assetft::MINTING;
     use coreum_wasm_sdk::types::coreum::asset::ft::v1::{
-        MsgIssue, MsgMint, QueryBalanceRequest, QueryParamsRequest,
+        Feature::Minting, MsgIssue, MsgMint, QueryBalanceRequest, QueryParamsRequest,
     };
     use coreum_wasm_sdk::types::cosmos::bank::v1beta1::MsgSend;
     use coreum_wasm_sdk::types::cosmos::base::v1beta1::Coin as BaseCoin;
@@ -135,7 +134,7 @@ mod tests {
                     precision: 6,
                     initial_amount: "10".to_string(),
                     description: "test_description".to_string(),
-                    features: vec![MINTING as i32],
+                    features: vec![Minting as i32],
                     burn_rate: "0".to_string(),
                     send_commission_rate: "0".to_string(),
                     uri: "test_uri".to_string(),
