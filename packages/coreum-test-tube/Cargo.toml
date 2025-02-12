@@ -4,7 +4,7 @@ edition = "2021"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/CoreumFoundation/test-tube"
 name = "coreum-test-tube"
-version = "5.0.0"
+version = "5.0.0-rc"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 exclude = ["coreum", "test_artifacts"]
@@ -16,7 +16,7 @@ cosmwasm-std = { version = "2.1.4", features = ["cosmwasm_2_0"] }
 prost = "0.12.6"
 serde = "1.0.203"
 serde_json = "1.0.117"
-test-tube-coreum = { version = "5.0.0", path = "../test-tube" }
+test-tube-coreum = { version = "5.0.0-rc", path = "../test-tube" }
 thiserror = "1.0.61"
 coreum-wasm-sdk = {git = "https://github.com/CoreumFoundation/coreum-wasm-sdk.git", branch = "main"}
 
