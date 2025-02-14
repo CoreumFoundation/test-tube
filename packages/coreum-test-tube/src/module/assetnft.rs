@@ -97,8 +97,9 @@ where
 #[cfg(test)]
 mod tests {
     use coreum_wasm_sdk::{
-        assetnft::BURNING,
-        types::coreum::asset::nft::v1::{MsgIssueClass, MsgMint, QueryParamsRequest},
+        types::coreum::asset::nft::v1::{
+            ClassFeature::Burning, MsgIssueClass, MsgMint, QueryParamsRequest,
+        },
         types::cosmos::nft::v1beta1::{MsgSend, QueryOwnerRequest},
     };
 
@@ -141,7 +142,7 @@ mod tests {
                     uri: "".to_string(),
                     uri_hash: "".to_string(),
                     data: None,
-                    features: vec![BURNING as i32],
+                    features: vec![Burning as i32],
                     royalty_rate: "0".to_string(),
                 },
                 &signer,

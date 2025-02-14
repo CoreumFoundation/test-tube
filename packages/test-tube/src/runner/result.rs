@@ -1,8 +1,8 @@
 use crate::runner::error::{DecodeError, RunnerError};
 use base64::engine::general_purpose::STANDARD as BASE64_STANDARD;
 use base64::Engine;
-use cosmrs::proto::cosmos::base::abci::v1beta1::{GasInfo, TxMsgData};
 use cosmrs::proto::cosmos::base::abci::v1beta1::SimulationResponse;
+use cosmrs::proto::cosmos::base::abci::v1beta1::{GasInfo, TxMsgData};
 use cosmrs::rpc::endpoint::broadcast::tx_commit::Response as TxCommitResponse;
 use cosmwasm_std::{Attribute, Event};
 use prost::Message;
@@ -49,7 +49,9 @@ where
                         .map(|a| -> Result<Attribute, Utf8Error> {
                             Ok(Attribute {
                                 key: std::str::from_utf8(&a.key).unwrap_or_default().to_string(),
-                                value: std::str::from_utf8(&a.value).unwrap_or_default().to_string(),
+                                value: std::str::from_utf8(&a.value)
+                                    .unwrap_or_default()
+                                    .to_string(),
                             })
                         })
                         .collect::<Result<Vec<Attribute>, Utf8Error>>()?,
