@@ -62,6 +62,7 @@ where
         let result = res.clone().result.unwrap();
         Ok(ExecuteResponse {
             data,
+            #[allow(deprecated)]
             raw_data: result.clone().data,
             events,
             gas_info: GasInfo {

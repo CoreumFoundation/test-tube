@@ -122,6 +122,7 @@ mod tests {
         // Let's create a second validator and check that it's active
         staking
             .create_validator(
+                #[allow(deprecated)]
                 MsgCreateValidator {
                     description: Some(Description {
                         moniker: "moniker".to_string(),
