@@ -67,7 +67,7 @@ mod tests {
     use cosmwasm_std::Coin;
 
     use crate::runner::app::FEE_DENOM;
-    use crate::{Account, AssetFT, Bank, CoreumTestApp, Dex, Module};
+    use crate::{Account, AssetFT, CoreumTestApp, Dex, Module};
 
     #[test]
     fn dex_testing() {
@@ -88,7 +88,7 @@ mod tests {
             params.default_unified_ref_amount,
             "1000000000000000000000000"
         );
-        assert_eq!(params.price_tick_exponent, -8);
+        assert_eq!(params.price_tick_exponent, -6);
         assert_eq!(params.max_orders_per_denom, 100);
         assert_eq!(
             params.order_reserve.unwrap(),
@@ -163,7 +163,7 @@ mod tests {
             base_denom: denom1.clone(),
             quote_denom: denom2.clone(),
             price: "1e-1".to_string(),
-            quantity: "100".to_string(),
+            quantity: "10000".to_string(),
             side: Side::Sell as i32,
             good_til: None,
             time_in_force: TimeInForce::Gtc as i32,
@@ -186,7 +186,9 @@ mod tests {
         )
         .unwrap();
 
-        dex.place_order(msg_place_order.clone(), &acc1).unwrap();
+        let mut msg_place_order = msg_place_order.clone();
+        msg_place_order.id = "id2".to_string();
+        dex.place_order(msg_place_order, &acc1).unwrap();
 
         let request_order_book_orders = dex
             .query_order_book_orders(&QueryOrderBookOrdersRequest {
@@ -198,18 +200,18 @@ mod tests {
             .unwrap();
 
         assert_eq!(request_order_book_orders.orders.len(), 1);
-        assert_eq!(request_order_book_orders.orders[0].id, "id");
+        assert_eq!(request_order_book_orders.orders[0].id, "id2");
         assert_eq!(request_order_book_orders.orders[0].price, "1e-1");
 
         let request_order = dex
             .query_order(&QueryOrderRequest {
                 creator: acc1.address().to_string(),
-                id: "id".to_string(),
+                id: "id2".to_string(),
             })
             .unwrap();
 
         let order = request_order.order.unwrap();
-        assert_eq!(order.id, "id");
+        assert_eq!(order.id, "id2");
         assert_eq!(order.price, "1e-1");
 
         let request_orders = dex
@@ -220,7 +222,7 @@ mod tests {
             .unwrap();
 
         assert_eq!(request_orders.orders.len(), 1);
-        assert_eq!(request_orders.orders[0].id, "id");
+        assert_eq!(request_orders.orders[0].id, "id2");
         assert_eq!(request_orders.orders[0].price, "1e-1");
 
         let request_account_denom_orders_count = dex
