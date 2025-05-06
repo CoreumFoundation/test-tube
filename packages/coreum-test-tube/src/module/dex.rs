@@ -1,9 +1,10 @@
 use coreum_wasm_sdk::types::coreum::dex::v1::{
     EmptyResponse, MsgCancelOrder, MsgCancelOrdersByDenom, MsgPlaceOrder,
     QueryAccountDenomOrdersCountRequest, QueryAccountDenomOrdersCountResponse,
-    QueryOrderBookOrdersRequest, QueryOrderBookOrdersResponse, QueryOrderBooksRequest,
-    QueryOrderBooksResponse, QueryOrderRequest, QueryOrderResponse, QueryOrdersRequest,
-    QueryOrdersResponse, QueryParamsRequest, QueryParamsResponse,
+    QueryOrderBookOrdersRequest, QueryOrderBookOrdersResponse, QueryOrderBookParamsRequest,
+    QueryOrderBookParamsResponse, QueryOrderBooksRequest, QueryOrderBooksResponse,
+    QueryOrderRequest, QueryOrderResponse, QueryOrdersRequest, QueryOrdersResponse,
+    QueryParamsRequest, QueryParamsResponse,
 };
 use test_tube_coreum::{fn_execute, fn_query, Module};
 
@@ -34,6 +35,10 @@ where
     }
 
     fn_query! {
+        pub query_order_book_params ["/coreum.dex.v1.Query/OrderBookParams"]: QueryOrderBookParamsRequest => QueryOrderBookParamsResponse
+    }
+
+    fn_query! {
         pub query_account_denom_orders_count ["/coreum.dex.v1.Query/AccountDenomOrdersCount"]: QueryAccountDenomOrdersCountRequest => QueryAccountDenomOrdersCountResponse
     }
 
@@ -59,8 +64,9 @@ mod tests {
     use coreum_wasm_sdk::types::coreum::asset::ft::v1::{DexSettings, Feature, MsgIssue};
     use coreum_wasm_sdk::types::coreum::dex::v1::{
         MsgCancelOrder, MsgCancelOrdersByDenom, MsgPlaceOrder, OrderType,
-        QueryAccountDenomOrdersCountRequest, QueryOrderBookOrdersRequest, QueryOrderBooksRequest,
-        QueryOrderRequest, QueryOrdersRequest, QueryParamsRequest, Side, TimeInForce,
+        QueryAccountDenomOrdersCountRequest, QueryOrderBookOrdersRequest,
+        QueryOrderBookParamsRequest, QueryOrderBooksRequest, QueryOrderRequest, QueryOrdersRequest,
+        QueryParamsRequest, Side, TimeInForce,
     };
     // use coreum_wasm_sdk::types::cosmos::bank::v1beta1::MsgSend;
     use coreum_wasm_sdk::types::cosmos::base::v1beta1::Coin as BaseCoin;
@@ -171,6 +177,24 @@ mod tests {
 
         dex.place_order(msg_place_order.clone(), &acc1).unwrap();
 
+        let request_order_book_params = dex
+            .query_order_book_params(&QueryOrderBookParamsRequest {
+                base_denom: denom1.clone(),
+                quote_denom: denom2.clone(),
+            })
+            .unwrap();
+
+        assert_eq!(request_order_book_params.price_tick, "1e-6");
+        assert_eq!(request_order_book_params.quantity_step, "10000");
+        assert_eq!(
+            request_order_book_params.base_denom_unified_ref_amount,
+            "1000000000000000000000000"
+        );
+        assert_eq!(
+            request_order_book_params.quote_denom_unified_ref_amount,
+            "1000000000000000000000000"
+        );
+
         let request_order_books = dex
             .query_order_books(&QueryOrderBooksRequest { pagination: None })
             .unwrap();
@@ -184,7 +208,7 @@ mod tests {
             },
             &acc1,
         )
-        .unwrap();
+            .unwrap();
 
         let mut msg_place_order = msg_place_order.clone();
         msg_place_order.id = "id2".to_string();
@@ -242,6 +266,6 @@ mod tests {
             },
             &acc1,
         )
-        .unwrap();
+            .unwrap();
     }
 }
